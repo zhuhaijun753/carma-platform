@@ -124,7 +124,19 @@ gitVersioner {
 	if (gitVersioner.featureBranchCommitCount > 0 ) {
           verString += gitVersioner.featureBranchCommitCount;
      	}
-	return "${gitVersioner.localChanges}"
-	
-    }
+	String localChanges = gitVersioner.localChanges;
+	String localbool = localChanges.substring(0,1);
+	if (!localbool.equals("0")) {
+          verString += "-SNAPSHOT";
+	  String changes = "";
+	  for (int i = 0; i < localChanges.length(); i++){
+	  	if (localChanges.charAt(i) == ' ') {
+			break;
+		}       
+		changes += localChanges.charAt(i); 
+	  }
+          verString += "(" + changes + ")";
+   	}
+	return "${verString}";
+}
 }
