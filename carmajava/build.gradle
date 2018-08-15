@@ -112,7 +112,6 @@ gitVersioner {
     // provide a custom formatter
     formatter = { gitVersioner ->
 	String verString = "";
-	verString += gitVersioner.versionCode;
 	String[] branchNameParts = gitVersioner.branchName.split("/");
 	String branchName = "";
       	if (branchNameParts.size() > 1) {
@@ -120,7 +119,7 @@ gitVersioner {
 	} else {
 	  branchName = branchNameParts[0];
 	}
-	verString += "-" + branchName;
+	verString += "" + branchName;
 	if (gitVersioner.featureBranchCommitCount > 0 ) {
           verString += gitVersioner.featureBranchCommitCount;
      	}

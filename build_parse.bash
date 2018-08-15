@@ -8,6 +8,7 @@ current_commit_short_hash=$(git rev-parse --short HEAD)
 cd carmajava
 hide=$(./gradlew :guidance:writeVersionFile)
 cd ./guidance/src/main/resources/
-version_name=$(sed -n 1p version)
-echo "The predicted build name is "$major'.'$intermediate'.'$minor'.'$version_name
+versionCode=$(sed -n 1p version)
+build_suffix=$(sed -n 2p version)
+echo "The predicted build name is "$major'.'$intermediate'.'$minor'.'$versionCode'-'$build_suffix
 echo "The shorthand sha hash of the latest commit of the branch you are currently on is "$current_commit_short_hash

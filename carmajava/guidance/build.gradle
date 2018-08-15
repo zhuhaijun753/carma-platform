@@ -71,7 +71,8 @@ dependencies {
 
 
 task writeVersionFile << {
-    println "Updating build name to: " + gitVersioner.versionName
+    println "Updating build number to: " + gitVersioner.versionCode
+    println "Updating build suffix to: " + gitVersioner.versionName
 
     // Make sure the resources folder exists
     def resourcesFolder = new File("$projectDir/src/main/resources")
@@ -83,7 +84,7 @@ task writeVersionFile << {
     def file = new File("$projectDir/src/main/resources/version")
     file.createNewFile();
     
-    file.text="$gitVersioner.versionName\n"
+    file.text="$gitVersioner.versionCode\n$gitVersioner.versionName\n"
 }
 
 compileJava {
