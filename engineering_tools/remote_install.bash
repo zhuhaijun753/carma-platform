@@ -140,17 +140,19 @@ if [[ $(echo -n $FOLDER | wc -m) -gt 0 ]]; then
 	echo "Trying to copy vehicle config params"
 	vehicle_param_files=( $FOLDER/*.yaml )
 	#copy the HostVehicleParams.yaml file
-	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${vehicle_param_files[0]}" ${USERNAME}@${HOST}:"${CARMA_DIR}/params/"
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "mkdir ${APP_DIR}/params"
+	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${vehicle_param_files[0]}" ${USERNAME}@${HOST}:"${APP_DIR}/params/"
 	# Update permissions script
-	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${CARMA_DIR}/params/*; chmod -R ${UG_PERMISSIONS} ${CARMA_DIR}/params/*; chmod -R ${O_PERMISSIONS} ${CARMA_DIR}/params/*;"
+	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${APP_DIR}/params/*; chmod -R ${UG_PERMISSIONS} ${APP_DIR}/params/*; chmod -R ${O_PERMISSIONS} ${APP_DIR}/params/*;"
 
 
 	echo "Trying to copy vehicle config urdf..."
 	vehicle_urdf_files=( $FOLDER/*.urdf )
 	# Copy the urdf file into the urdf folder
-	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${vehicle_urdf_files[0]}" ${USERNAME}@${HOST}:"${CARMA_DIR}/urdf/"
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "mkdir ${APP_DIR}/urdf"
+	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${vehicle_urdf_files[0]}" ${USERNAME}@${HOST}:"${APP_DIR}/urdf/"
 	# Update permissions script
-	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${CARMA_DIR}/urdf/*; chmod -R ${UG_PERMISSIONS} ${CARMA_DIR}/urdf/*; chmod -R ${O_PERMISSIONS} ${CARMA_DIR}/urdf/*;"
+	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${APP_DIR}/urdf/*; chmod -R ${UG_PERMISSIONS} ${APP_DIR}/urdf/*; chmod -R ${O_PERMISSIONS} ${APP_DIR}/urdf/*;"
 	
 
 	echo "Trying to copy vehicle config launch files..."
@@ -279,34 +281,36 @@ fi
 if [ ${EVERYTHING} == true ] || [ ${PARAMS} == true ]; then
 	echo "Trying to copy params"
 	# Set up scripts
-	BACKUP_HOST_PARAMS="mv ${CARMA_DIR}/params/HostVehicleParams.yaml ${CARMA_DIR}/params/HostVehicleParamsTemp.yaml"
-	SET_HOST_PARAMS="rm ${CARMA_DIR}/params/HostVehicleParams.yaml; mv ${CARMA_DIR}/params/HostVehicleParamsTemp.yaml ${CARMA_DIR}/params/HostVehicleParams.yaml"
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "mkdir ${APP_DIR}/params"
+	BACKUP_HOST_PARAMS="mv ${APP_DIR}/params/HostVehicleParams.yaml ${APP_DIR}/params/HostVehicleParamsTemp.yaml"
+	SET_HOST_PARAMS="rm ${APP_DIR}/params/HostVehicleParams.yaml; mv ${APP_DIR}/params/HostVehicleParamsTemp.yaml ${APP_DIR}/params/HostVehicleParams.yaml"
 	
 	if [ ${OVERWRITE_HOST_PARAMS} == false ]; then
 		# Backup host vehicle params
 		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "${BACKUP_HOST_PARAMS}"
 	fi
 	# Copy the entire folder to the remote machine
-	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${PARAMS_DIR}" ${USERNAME}@${HOST}:"${CARMA_DIR}"
+	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${PARAMS_DIR}" ${USERNAME}@${HOST}:"${APP_DIR}"
 	
 	if [ ${OVERWRITE_HOST_PARAMS} == false ]; then
 		# Reset to backup of host vehicle params
 		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "${SET_HOST_PARAMS}"
 	fi
 	# Update permissions script
-	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${CARMA_DIR}/params/*; chmod -R ${UG_PERMISSIONS} ${CARMA_DIR}/params/*; chmod -R ${O_PERMISSIONS} ${CARMA_DIR}/params/*;"
+	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${APP_DIR}/params/*; chmod -R ${UG_PERMISSIONS} ${APP_DIR}/params/*; chmod -R ${O_PERMISSIONS} ${APP_DIR}/params/*;"
 fi
 
 # If we want to copy routes
 if [ ${EVERYTHING} == true ] || [ ${ROUTES} == true ]; then
 	echo "Trying to copy routes..."
 	# Delete old files
-	SCRIPT="rm -r ${CARMA_DIR}/routes/*;"
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "mkdir ${APP_DIR}/routes"
+	SCRIPT="rm -r ${APP_DIR}/routes/*;"
 	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${USERNAME} ${HOST} "${SCRIPT}"
 	# Copy the entire folder to the remote machine
-	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${ROUTES_DIR}" ${USERNAME}@${HOST}:"${CARMA_DIR}"
+	scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${ROUTES_DIR}" ${USERNAME}@${HOST}:"${APP_DIR}"
 		# Update permissions script
-	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${CARMA_DIR}/routes/*; chmod -R ${UG_PERMISSIONS} ${CARMA_DIR}/routes/*; chmod -R ${O_PERMISSIONS} ${CARMA_DIR}/routes/*;"
+	PERMISSIONS_SCRIPT="${PERMISSIONS_SCRIPT} chgrp -R ${GROUP} ${APP_DIR}/routes/*; chmod -R ${UG_PERMISSIONS} ${APP_DIR}/routes/*; chmod -R ${O_PERMISSIONS} ${APP_DIR}/routes/*;"
 fi
 
 # If we want to copy launch file

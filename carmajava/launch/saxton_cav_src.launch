@@ -33,6 +33,7 @@
   <!-- Constants -->
   <!-- Directory of Parameter Files -->
   <arg name="CARMA_DIR" default="$(find carma)" doc="The path of the package directory"/>
+  <arg name="ROUTE_DIR" default="$(arg CARMA_DIR)/app/routes" doc="Directory of route files"/>
   <arg name="PARAM_DIR" default="$(arg CARMA_DIR)/launch/params" doc="Directory of yaml parameter files"/>
   <!-- Path to Unified Robot Description Format URDF file for loading static transforms -->
   <arg name="URDF_FILE" default="$(arg CARMA_DIR)/launch/urdf/saxton_cav.urdf" doc="Path to the vehicle's URDF file"/>
@@ -280,6 +281,8 @@
         <env if="$(arg debug_route)" name="ROUTE_OPTS" value="$(arg JVM_DEBUG_OPTS)"/>
 
         <rosparam command="load" file="$(arg PARAM_DIR)/RouteParams.yaml"/>
+	
+	<param name="default_database_path" value="$(arg ROUTE_DIR)"/>
 
         <remap from="package_path"
                to="/$(arg TOP_NS)/package_path"/>

@@ -34,8 +34,9 @@
 
   <!-- Override Required Paths -->
   <arg name="CARMA_DIR" default="/opt/carma" doc="The path of the package directory"/>
-  <arg name="PARAM_DIR" default="$(arg CARMA_DIR)/params" doc="Directory of yaml parameter files"/>
-  <arg name="URDF_FILE" default="$(arg CARMA_DIR)/urdf/saxton_cav.urdf" doc="Path to the vehicle's URDF file"/>
+  <arg name="PARAM_DIR" default="$(arg CARMA_DIR)/app/params" doc="Directory of yaml parameter files"/>
+  <arg name="ROUTE_DIR" default="$(arg CARMA_DIR)/app/routes" doc="Directory of route files"/>
+  <arg name="URDF_FILE" default="$(arg CARMA_DIR)/app/urdf/saxton_cav.urdf" doc="Path to the vehicle's URDF file"/>
   <arg name="DATA_DIR"  default="$(arg CARMA_DIR)/app/mock_data" doc="Directory of driver simulation"/>
   <arg name="SCRIPTS_DIR" default="$(arg CARMA_DIR)/app/engineering_tools" doc="The directory containing scripts for execution"/>
   <arg name="LAUNCH_DIR" default="$(arg CARMA_DIR)/app/bin/share/carma" doc="Directory containing additional carma launch files such as driver.launch"/>
