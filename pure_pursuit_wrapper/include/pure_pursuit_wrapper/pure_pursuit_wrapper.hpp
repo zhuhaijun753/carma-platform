@@ -16,6 +16,7 @@
 
 // ROS
 #include <ros/ros.h>
+#include <cav_msgs/SystemAlert.h>
 
 namespace pure_pursuit_wrapper {
 
@@ -48,6 +49,17 @@ class PurePursuitWrapper {
 
         //! ROS node handle.
         ros::NodeHandle& nodeHandle_;
+
+
+
+        //! ROS SystemAlert Subscriber.
+        ros::Subscriber SystemAlertSubscriber_;
+
+        /*!
+        * ROS SystemAlert topic callback method.
+        * @param message the received message.
+        */
+        void SystemAlertSubscriberCallback(const cav_msgs::SystemAlert::ConstPtr& msg);
 
 
 };
