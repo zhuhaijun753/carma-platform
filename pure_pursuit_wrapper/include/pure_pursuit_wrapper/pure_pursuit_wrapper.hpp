@@ -16,7 +16,16 @@
 
 // ROS
 #include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+
 #include <cav_msgs/SystemAlert.h>
+#include <cav_msgs/TrajectoryPlan.h>
+
+// autoware
+#include "autoware_msgs/Lane.h"
+#include "autoware_config_msgs/ConfigWaypointFollower.h"
+#include "autoware_msgs/ControlCommandStamped.h"
 
 namespace pure_pursuit_wrapper {
 
@@ -61,6 +70,27 @@ class PurePursuitWrapper {
         */
         void SystemAlertSubscriberCallback(const cav_msgs::SystemAlert::ConstPtr& msg);
 
+
+
+
+        //! ROS TrajectoryPlan Subscriber.
+        ros::Subscriber TrajectoryPlanSubscriber_;
+
+        /*!
+        * ROS TrajectoryPlan topic callback method.
+        * @param message the received message.
+        */
+        void TrajectoryPlanSubscriberCallback(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
+
+
+        ros::Publisher WayPoints;
+        ros::Publisher CurrentPose;
+        ros::Publisher CurrentVelocity;
+
+        void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
+        void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr &msg);
+        void PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr &msg);
+        void PublisherForWayPoints(const autoware_msgs::LaneConstPtr &msg);
 
 };
 

@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
+  autoware_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES pure_pursuit_wrapper
- CATKIN_DEPENDS cav_msgs roscpp rospy std_msgs
+ CATKIN_DEPENDS cav_msgs roscpp rospy std_msgs geometry_msgs autoware_msgs
 #  DEPENDS system_lib
 )
 
