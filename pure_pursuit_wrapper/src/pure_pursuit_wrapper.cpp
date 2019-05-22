@@ -18,23 +18,31 @@
 
 namespace pure_pursuit_wrapper {
 
-PurePursuitWrapper::PurePursuitWrapper(ros::NodeHandle &nodeHandle)
-    : nodeHandle_(nodeHandle)
+PurePursuitWrapper::PurePursuitWrapper(ros::NodeHandle &nodeHandle): nh_(nodeHandle)
 {
-  if (!readParameters())
+  if (!ReadParameters())
   {
     ROS_ERROR("Could not read parameters.");
   }
 
+  Initialize();
+
   ROS_INFO("Successfully launched node.");
 }
 
-PurePursuitWrapper::~PurePursuitWrapper()
-{
+PurePursuitWrapper::~PurePursuitWrapper() {
 }
 
-bool PurePursuitWrapper::readParameters()
-{
+void PurePursuitWrapper::Initialize() {
+
+  // SystemAlert Subscriber
+  system_alert_sub_ = nh_.subscribe("system_alert", 10, &PurePursuitWrapper::SystemAlertHandler, this);
+  // SystemAlert Publisher
+  system_alert_pub_ = nh_.advertise<cav_msgs::SystemAlert>("system_alert", 10, true);
+
+}
+
+bool PurePursuitWrapper::ReadParameters() {
   // nodeHandle_.param<std::string>("SpeedAccelPublisher_topic", SpeedAccelPublisherTopic_, "/republish/cmd_speed");
   // nodeHandle_.param<std::string>("WrenchEffortPublisher_topic", WrenchEffortPublisherTopic_, "/republish/cmd_longitudinal_effort");
   // nodeHandle_.param<std::string>("LateralControlPublisher_topic", LateralControlPublisherTopic_, "/republish/cmd_lateral");
@@ -44,4 +52,40 @@ bool PurePursuitWrapper::readParameters()
   return true;
 }
 
+void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg) {
+    ROS_DEBUG("I heard SystemAlert");
+    try {
+      ROS_INFO_STREAM("Received SystemAlert message of type: " << msg->type);
+      switch(msg->type) {
+        case cav_msgs::SystemAlert::SHUTDOWN: 
+          Shutdown(); // Shutdown this node when a SHUTDOWN request is received 
+          break;
+      }
+    }
+    catch(const std::exception& e) {
+      HandleException(e);
+    }
+};
+
+void PurePursuitWrapper::HandleException(const std::exception& e) {
+  ROS_DEBUG("sending SystemAlert message");
+  // Create system alert message
+  cav_msgs::SystemAlert alert_msg;
+  alert_msg.type = cav_msgs::SystemAlert::FATAL;
+  alert_msg.description = "Uncaught Exception in " + ros::this_node::getName() + " exception: " + e.what();
+ 
+  ROS_ERROR_STREAM(alert_msg.description); // Log exception
+
+  system_alert_pub_.publish(alert_msg); // Notify the rest of the system
+
+  ros::Duration(0.05).sleep(); // Leave a small amount of time for the alert to be published
+  Shutdown(); // Shutdown this node
 }
+
+void PurePursuitWrapper::Shutdown() {
+  std::lock_guard<std::mutex> lock(shutdown_mutex_);
+  ROS_WARN_STREAM("Node shutting down");
+  shutting_down_ = true;
+}
+
+}  // namespace pure_pursuit_wrapper

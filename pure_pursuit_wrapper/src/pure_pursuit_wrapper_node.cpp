@@ -17,11 +17,16 @@
 #include <ros/ros.h>
 #include "pure_pursuit_wrapper/pure_pursuit_wrapper.hpp"
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 
   ros::init(argc, argv, "pure_pursuit_wrapper_node");
-  ros::NodeHandle nodeHandle("~");
+  ros::NodeHandle nh("~");
+
+  pure_pursuit_wrapper::PurePursuitWrapper PurePursuitWrapper(nh);
+
+  while (ros::ok() && !PurePursuitWrapper.shutting_down_) {
+    ros::spinOnce();
+  }
 
   ROS_INFO("Successfully launched node.");
   return 0;

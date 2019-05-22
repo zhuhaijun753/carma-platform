@@ -14,6 +14,8 @@
  * the License.
  */
 
+#include <mutex>
+
 // ROS
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -45,52 +47,63 @@ class PurePursuitWrapper {
         * Destructor.
         */
         virtual ~PurePursuitWrapper();
+
+        // @brief ROS initialize.
+        void Initialize();
         
         // runs publish at a desired frequency
         int rate;
 
+        // Shutdown flags and mutex
+        std::mutex shutdown_mutex_;
+        bool shutting_down_ = false;
+
+
     private:
+
+        //@brief ROS node handle.
+        ros::NodeHandle& nh_;
+
+        //@brief ROS subscribers.
+        ros::Subscriber system_alert_sub_;
+        ros::Subscriber trajectory_plan_sub_;
+
+        // @brief ROS publishers.
+        ros::Publisher way_points_pub_;
+        ros::Publisher current_pose_pub_;
+        ros::Publisher current_velocity_pub_;
+        ros::Publisher system_alert_pub_;
+
         /*!
         * Reads and verifies the ROS parameters.
         * @return true if successful.
         */
-        bool readParameters();
+        bool ReadParameters();
 
-        //! ROS node handle.
-        ros::NodeHandle& nodeHandle_;
+        // @brief ROS subscriber handlers.
+        void SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg);
+        void TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
 
-
-
-        //! ROS SystemAlert Subscriber.
-        ros::Subscriber SystemAlertSubscriber_;
-
-        /*!
-        * ROS SystemAlert topic callback method.
-        * @param message the received message.
-        */
-        void SystemAlertSubscriberCallback(const cav_msgs::SystemAlert::ConstPtr& msg);
+        // @brief ROS publisher handlers.
+        void PublisherForSystemAlert(const cav_msgs::SystemAlert::ConstPtr& msg);
+        // void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
+        void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
+        void PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg);
+        void PublisherForWayPoints(const autoware_msgs::LaneConstPtr& msg);
 
 
+        /*
+         * @brief Handles caught exceptions which have reached the top level of this node
+         * 
+         * @param message The exception to handle
+         * 
+         * If an exception reaches the top level of this node it should be passed to this function.
+         * The function will try to log the exception and publish a FATAL message to system_alert before shutting itself down.
+         */
+        void HandleException(const std::exception& e);
 
-
-        //! ROS TrajectoryPlan Subscriber.
-        ros::Subscriber TrajectoryPlanSubscriber_;
-
-        /*!
-        * ROS TrajectoryPlan topic callback method.
-        * @param message the received message.
-        */
-        void TrajectoryPlanSubscriberCallback(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
-
-
-        ros::Publisher WayPoints;
-        ros::Publisher CurrentPose;
-        ros::Publisher CurrentVelocity;
-
-        void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
-        void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr &msg);
-        void PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr &msg);
-        void PublisherForWayPoints(const autoware_msgs::LaneConstPtr &msg);
+        // @brief Shutsdown this node
+        void Shutdown();
 
 };
 
