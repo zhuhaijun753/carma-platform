@@ -34,12 +34,17 @@ PurePursuitWrapper::~PurePursuitWrapper() {
 }
 
 void PurePursuitWrapper::Initialize() {
-
   // SystemAlert Subscriber
   system_alert_sub_ = nh_.subscribe("system_alert", 10, &PurePursuitWrapper::SystemAlertHandler, this);
   // SystemAlert Publisher
   system_alert_pub_ = nh_.advertise<cav_msgs::SystemAlert>("system_alert", 10, true);
 
+  // WayPoints Publisher
+  way_points_pub_ = nh_.advertise<autoware_msgs::Lane>("final_waypoints", 10, true);
+  // CurrentPose Publisher
+  current_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("current_pose", 10, true);
+  // CurrentVelocity Publisher
+  current_velocity_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("current_velocity", 10, true);
 }
 
 bool PurePursuitWrapper::ReadParameters() {
@@ -52,8 +57,12 @@ bool PurePursuitWrapper::ReadParameters() {
   return true;
 }
 
+void PurePursuitWrapper::TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg){
+  // TODO
+};
+
 void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg) {
-    ROS_DEBUG("I heard SystemAlert");
+    ROS_INFO("I heard SystemAlert");
     try {
       ROS_INFO_STREAM("Received SystemAlert message of type: " << msg->type);
       switch(msg->type) {
@@ -67,8 +76,36 @@ void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPt
     }
 };
 
+void PurePursuitWrapper::PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg){
+  try {
+    current_pose_pub_.publish(msg);
+  }
+  catch(const std::exception& e) {
+    HandleException(e);
+  }
+};
+
+void PurePursuitWrapper::PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg){
+  try {
+    current_velocity_pub_.publish(msg);
+  }
+  catch(const std::exception& e) {
+    HandleException(e);
+  }
+};
+
+void PurePursuitWrapper::PublisherForWayPoints(const autoware_msgs::LaneConstPtr& msg){
+  try {
+    way_points_pub_.publish(msg);
+  }
+  catch(const std::exception& e) {
+    HandleException(e);
+  }
+};
+
+
 void PurePursuitWrapper::HandleException(const std::exception& e) {
-  ROS_DEBUG("sending SystemAlert message");
+  ROS_DEBUG("Sending SystemAlert Message");
   // Create system alert message
   cav_msgs::SystemAlert alert_msg;
   alert_msg.type = cav_msgs::SystemAlert::FATAL;

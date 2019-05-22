@@ -84,8 +84,6 @@ class PurePursuitWrapper {
         void SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg);
         void TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
 
-        // @brief ROS publisher handlers.
-        void PublisherForSystemAlert(const cav_msgs::SystemAlert::ConstPtr& msg);
         // void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
         void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
         void PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg);

@@ -9,6 +9,7 @@
     <!-- Pure Pursuit Wrapper Node -->
     <node pkg="pure_pursuit_wrapper" type="pure_pursuit_wrapper_node" name="pure_pursuit_wrapper_node" output="screen">
         <rosparam command="load" file="$(find pure_pursuit_wrapper)/config/default.yaml" />
+        <remap from="system_alert" to="/control/system_alert"/>
     </node>
     
 </launch>
