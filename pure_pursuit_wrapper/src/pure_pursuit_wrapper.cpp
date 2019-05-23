@@ -44,11 +44,11 @@ void PurePursuitWrapper::Initialize() {
   trajectory_plan_sub_ = nh_.subscribe("trajectory_plan", 10, &PurePursuitWrapper::TrajectoryPlanHandler, this);
 
   // WayPoints Publisher
-  way_points_pub_ = nh_.advertise<autoware_msgs::Lane>("final_waypoints", 10, true);
+  way_points_pub_ = nh_.advertise<autoware_msgs::Lane>("/final_waypoints", 10, true);
   // CurrentPose Publisher
   // current_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("current_pose", 10, true);
   // CurrentVelocity Publisher
-  current_velocity_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("current_velocity", 10, true);
+  current_velocity_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/current_velocity", 10, true);
 }
 
 bool PurePursuitWrapper::ReadParameters() {
@@ -63,9 +63,17 @@ bool PurePursuitWrapper::ReadParameters() {
 
 void PurePursuitWrapper::TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg){
     try {
-      ROS_DEBUG_STREAM("Received TrajectoryPlan message");
+      ROS_INFO_STREAM("Received TrajectoryPlan message");
       autoware_msgs::Lane lane;
       autoware_msgs::Waypoint waypoint;
+      waypoint.twist.twist.angular.x = 10;
+      waypoint.twist.twist.angular.y = 10;
+      waypoint.twist.twist.angular.z = 10;
+      
+      waypoint.twist.twist.linear.x = 10;
+      waypoint.twist.twist.linear.y = 10;
+      waypoint.twist.twist.linear.z = 10;
+
       std::vector <autoware_msgs::Waypoint> waypoints; 
       waypoints.insert(waypoints.begin(), waypoint);
       lane.header = msg->header;
@@ -75,6 +83,19 @@ void PurePursuitWrapper::TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::C
       // lane.waypoints = waypoint;
 
       PublisherForWayPoints(lane);
+
+
+      geometry_msgs::TwistStamped Velocity;
+
+      Velocity.twist.angular.x = 100;
+      Velocity.twist.angular.y = 100;
+      Velocity.twist.angular.z = 100;
+
+      Velocity.twist.angular.x = 100;
+      Velocity.twist.angular.y = 100;
+      Velocity.twist.angular.z = 100;
+
+      PublisherForCurrentVelocity(Velocity);
     }
     catch(const std::exception& e) {
       HandleException(e);
@@ -105,7 +126,7 @@ void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPt
 //   }
 // };
 
-void PurePursuitWrapper::PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg){
+void PurePursuitWrapper::PublisherForCurrentVelocity(geometry_msgs::TwistStamped& msg){
   try {
     current_velocity_pub_.publish(msg);
   }
@@ -116,13 +137,13 @@ void PurePursuitWrapper::PublisherForCurrentVelocity(const geometry_msgs::TwistS
 
 void PurePursuitWrapper::PublisherForWayPoints(autoware_msgs::Lane& msg){
   try {
+    ROS_INFO_STREAM("Sending WayPoints message.");
     way_points_pub_.publish(msg);
   }
   catch(const std::exception& e) {
     HandleException(e);
   }
 };
-
 
 void PurePursuitWrapper::HandleException(const std::exception& e) {
   ROS_DEBUG("Sending SystemAlert Message");

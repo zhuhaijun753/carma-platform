@@ -88,7 +88,7 @@ class PurePursuitWrapper {
 
         // void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
         // void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
-        void PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg);
+        void PublisherForCurrentVelocity(geometry_msgs::TwistStamped& msg);
         void PublisherForWayPoints(autoware_msgs::Lane& msg);
 
 
