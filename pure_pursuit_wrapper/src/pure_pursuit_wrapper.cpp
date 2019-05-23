@@ -34,15 +34,19 @@ PurePursuitWrapper::~PurePursuitWrapper() {
 }
 
 void PurePursuitWrapper::Initialize() {
+  
   // SystemAlert Subscriber
   system_alert_sub_ = nh_.subscribe("system_alert", 10, &PurePursuitWrapper::SystemAlertHandler, this);
   // SystemAlert Publisher
   system_alert_pub_ = nh_.advertise<cav_msgs::SystemAlert>("system_alert", 10, true);
 
+  // SystemAlert Subscriber
+  trajectory_plan_sub_ = nh_.subscribe("trajectory_plan", 10, &PurePursuitWrapper::TrajectoryPlanHandler, this);
+
   // WayPoints Publisher
   way_points_pub_ = nh_.advertise<autoware_msgs::Lane>("final_waypoints", 10, true);
   // CurrentPose Publisher
-  current_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("current_pose", 10, true);
+  // current_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("current_pose", 10, true);
   // CurrentVelocity Publisher
   current_velocity_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("current_velocity", 10, true);
 }
@@ -58,11 +62,27 @@ bool PurePursuitWrapper::ReadParameters() {
 }
 
 void PurePursuitWrapper::TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg){
-  // TODO
+    try {
+      ROS_DEBUG_STREAM("Received TrajectoryPlan message");
+      autoware_msgs::Lane lane;
+      autoware_msgs::Waypoint waypoint;
+      std::vector <autoware_msgs::Waypoint> waypoints; 
+      waypoints.insert(waypoints.begin(), waypoint);
+      lane.header = msg->header;
+      // std::string::size_type sz;
+      // lane.lane_id = std::stoi (msg->trajectory_id,&sz);
+      lane.waypoints = waypoints;
+      // lane.waypoints = waypoint;
+
+      PublisherForWayPoints(lane);
+    }
+    catch(const std::exception& e) {
+      HandleException(e);
+    }
+
 };
 
 void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg) {
-    ROS_INFO("I heard SystemAlert");
     try {
       ROS_INFO_STREAM("Received SystemAlert message of type: " << msg->type);
       switch(msg->type) {
@@ -76,14 +96,14 @@ void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPt
     }
 };
 
-void PurePursuitWrapper::PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg){
-  try {
-    current_pose_pub_.publish(msg);
-  }
-  catch(const std::exception& e) {
-    HandleException(e);
-  }
-};
+// void PurePursuitWrapper::PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg){
+//   try {
+//     current_pose_pub_.publish(msg);
+//   }
+//   catch(const std::exception& e) {
+//     HandleException(e);
+//   }
+// };
 
 void PurePursuitWrapper::PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg){
   try {
@@ -94,7 +114,7 @@ void PurePursuitWrapper::PublisherForCurrentVelocity(const geometry_msgs::TwistS
   }
 };
 
-void PurePursuitWrapper::PublisherForWayPoints(const autoware_msgs::LaneConstPtr& msg){
+void PurePursuitWrapper::PublisherForWayPoints(autoware_msgs::Lane& msg){
   try {
     way_points_pub_.publish(msg);
   }

@@ -70,7 +70,7 @@ class PurePursuitWrapper {
 
         // @brief ROS publishers.
         ros::Publisher way_points_pub_;
-        ros::Publisher current_pose_pub_;
+        // ros::Publisher current_pose_pub_;
         ros::Publisher current_velocity_pub_;
         ros::Publisher system_alert_pub_;
 
@@ -84,12 +84,12 @@ class PurePursuitWrapper {
         void SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg);
         void TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
 
-        // @brief ROS publishers.
+        // @brief ROS pusblishers.
 
         // void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
-        void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
+        // void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
         void PublisherForCurrentVelocity(const geometry_msgs::TwistStampedConstPtr& msg);
-        void PublisherForWayPoints(const autoware_msgs::LaneConstPtr& msg);
+        void PublisherForWayPoints(autoware_msgs::Lane& msg);
 
 
         /*

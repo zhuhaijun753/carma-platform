@@ -16,8 +16,12 @@
 
 #include <ros/ros.h>
 #include "pure_pursuit_wrapper/pure_pursuit_wrapper.hpp"
+#include <ros/console.h>
 
 int main(int argc, char** argv) {
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { // Change the level to fit your needs
+    ros::console::notifyLoggerLevelsChanged();
+  }
 
   ros::init(argc, argv, "pure_pursuit_wrapper_node");
   ros::NodeHandle nh("~");
