@@ -18,6 +18,9 @@
 #include "pure_pursuit_wrapper/pure_pursuit_wrapper.hpp"
 #include <ros/console.h>
 
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+
 int main(int argc, char** argv) {
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { // Change the level to fit your needs
     ros::console::notifyLoggerLevelsChanged();
@@ -27,6 +30,11 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh("~");
 
   pure_pursuit_wrapper::PurePursuitWrapper PurePursuitWrapper(nh);
+
+  message_filters::Subscriber<geometry_msgs::PoseStamped> pose_sub(nh, "pose_stamped", 1);
+  message_filters::Subscriber<cav_msgs::TrajectoryPlan> trajectory_plan_sub(nh, "trajectory_plan", 1);
+  message_filters::TimeSynchronizer<geometry_msgs::PoseStamped, cav_msgs::TrajectoryPlan> sync(pose_sub, trajectory_plan_sub, 10);
+  sync.registerCallback(boost::bind(&pure_pursuit_wrapper::PurePursuitWrapper::TrajectoryPlanToWayPointHandler, &PurePursuitWrapper, _1, _2));
 
   while (ros::ok() && !PurePursuitWrapper.shutting_down_) {
     ros::spinOnce();

@@ -20,7 +20,10 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
 
+// msgs
 #include <cav_msgs/SystemAlert.h>
 #include <cav_msgs/TrajectoryPlan.h>
 
@@ -57,7 +60,7 @@ class PurePursuitWrapper {
         // Shutdown flags and mutex
         std::mutex shutdown_mutex_;
         bool shutting_down_ = false;
-
+        void TrajectoryPlanToWayPointHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp);
 
     private:
 
@@ -91,7 +94,9 @@ class PurePursuitWrapper {
         void PublisherForCurrentVelocity(geometry_msgs::TwistStamped& msg);
         void PublisherForWayPoints(autoware_msgs::Lane& msg);
 
-
+        // Convert TrajectoryPlanPoint to Waypoint. This is used by TrajectoryPlanHandler.
+        autoware_msgs::Waypoint TrajectoryPlanPointToWaypointConverter(geometry_msgs::PoseStamped pose, cav_msgs::TrajectoryPlanPoint tpp);
+          
         /*
          * @brief Handles caught exceptions which have reached the top level of this node
          * 
