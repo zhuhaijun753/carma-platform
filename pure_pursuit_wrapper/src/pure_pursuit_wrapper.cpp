@@ -41,7 +41,7 @@ void PurePursuitWrapper::Initialize() {
   system_alert_pub_ = nh_.advertise<cav_msgs::SystemAlert>("system_alert", 10, true);
 
   // trajectory_plan Subscriber
-  trajectory_plan_sub_ = nh_.subscribe("trajectory_plan", 10, &PurePursuitWrapper::TrajectoryPlanHandler, this);
+  // trajectory_plan_sub_ = nh_.subscribe("trajectory_plan", 10, &PurePursuitWrapper::TrajectoryPlanHandler, this);
 
   // WayPoints Publisher
   way_points_pub_ = nh_.advertise<autoware_msgs::Lane>("/final_waypoints", 10, true);
@@ -66,7 +66,33 @@ bool PurePursuitWrapper::ReadParameters() {
 void PurePursuitWrapper::TrajectoryPlanToWayPointHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp){
   ROS_INFO_STREAM("Received TrajectoryPlanCurrentPosecallback message");
     try {
-      autoware_msgs::Waypoint waypoint = TrajectoryPlanPointToWaypointConverter(*pose,tp->trajectory_points[0]);
+
+      autoware_msgs::Lane lane;
+      lane.header = tp->header;
+      std::vector <autoware_msgs::Waypoint> waypoints;
+
+      for(cav_msgs::TrajectoryPlanPoint tpp : tp->trajectory_points) {
+        autoware_msgs::Waypoint waypoint = TrajectoryPlanPointToWaypointConverter(*pose,tpp);
+        waypoints.push_back(waypoint);
+      }
+
+      lane.waypoints = waypoints;
+      PublisherForWayPoints(lane);
+      
+
+      geometry_msgs::TwistStamped Velocity;
+
+      Velocity.twist.angular.x = 10;
+      Velocity.twist.angular.y = 2;
+      Velocity.twist.angular.z = 100;
+
+      Velocity.twist.angular.x = 100;
+      Velocity.twist.angular.y = 100;
+      Velocity.twist.angular.z = 100;
+
+      PublisherForCurrentVelocity(Velocity);
+
+
     }
     catch(const std::exception& e) {
       HandleException(e);
@@ -76,7 +102,7 @@ void PurePursuitWrapper::TrajectoryPlanToWayPointHandler(const geometry_msgs::Po
 
 
 autoware_msgs::Waypoint PurePursuitWrapper::TrajectoryPlanPointToWaypointConverter(geometry_msgs::PoseStamped pose, cav_msgs::TrajectoryPlanPoint tpp) {
-  ROS_INFO_STREAM("TrajectoryPlanPointToWaypointConverter i was callled");
+  ROS_INFO_STREAM("Convertering TrajectoryPlanPointToWaypoint");
 
   autoware_msgs::Waypoint waypoint;
   waypoint.gid = 0;
@@ -92,17 +118,22 @@ autoware_msgs::Waypoint PurePursuitWrapper::TrajectoryPlanPointToWaypointConvert
   waypoint.time_cost = 0;
   waypoint.direction = 0;
 
-  // waypoint.twist ;
+  double begin = ros::Time::now().toSec();
+  double delta_t = ((tpp.target_time * 1000) - begin);
+  waypoint.twist.twist.linear.x = (pose.pose.position.x - tpp.x) / delta_t;
+  waypoint.twist.twist.linear.y = (pose.pose.position.y - tpp.y) / delta_t;
 
   // // center line of the lane
   // waypoint.dtlane;
+
+  ROS_INFO_STREAM("Finish Convertering TrajectoryPlanPointToWaypoint");
 
   return waypoint;
 }
 
 void PurePursuitWrapper::TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg){
     try {
-      ROS_INFO_STREAM("Received TrajectoryPlan message");
+      // ROS_INFO_STREAM("Received TrajectoryPlan message");
 
       autoware_msgs::Lane lane;
       autoware_msgs::Waypoint waypoint;
