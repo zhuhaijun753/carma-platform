@@ -60,6 +60,10 @@ class PurePursuitWrapper {
         // Shutdown flags and mutex
         std::mutex shutdown_mutex_;
         bool shutting_down_ = false;
+
+        message_filters::Subscriber<geometry_msgs::PoseStamped> pose_sub;
+        message_filters::Subscriber<cav_msgs::TrajectoryPlan> trajectory_plan_sub;
+
         void TrajectoryPlanToWayPointHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp);
 
     private:
@@ -88,9 +92,6 @@ class PurePursuitWrapper {
         void TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
 
         // @brief ROS pusblishers.
-
-        // void PublisherForConfig(const autoware_config_msgs::ConfigWaypointFollowerConstPtr &config);
-        // void PublisherForCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
         void PublisherForCurrentVelocity(geometry_msgs::TwistStamped& msg);
         void PublisherForWayPoints(autoware_msgs::Lane& msg);
 
