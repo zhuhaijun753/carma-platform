@@ -23,18 +23,17 @@
 #include <message_filters/sync_policies/approximate_time.h>
 
 int main(int argc, char** argv) {
-  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { 
-    ros::console::notifyLoggerLevelsChanged();
-  }
+  // if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info)) { 
+  //   ros::console::notifyLoggerLevelsChanged();
+  // }
 
   ros::init(argc, argv, "pure_pursuit_wrapper_node");
   ros::NodeHandle nh("~");
 
   pure_pursuit_wrapper::PurePursuitWrapper PurePursuitWrapper(nh);
 
-  typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseStamped, cav_msgs::TrajectoryPlan> MySyncPolicy;
-  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), PurePursuitWrapper.pose_sub, PurePursuitWrapper.trajectory_plan_sub);
-  sync.registerCallback(boost::bind(&pure_pursuit_wrapper::PurePursuitWrapper::TrajectoryPlanToWayPointHandler, &PurePursuitWrapper, _1, _2));
+  message_filters::Synchronizer<pure_pursuit_wrapper::PurePursuitWrapper::SyncPolicy> sync(pure_pursuit_wrapper::PurePursuitWrapper::SyncPolicy(10), PurePursuitWrapper.pose_sub, PurePursuitWrapper.trajectory_plan_sub);
+  sync.registerCallback(boost::bind(&pure_pursuit_wrapper::PurePursuitWrapper::TrajectoryPlanPoseHandler, &PurePursuitWrapper, _1, _2));
 
   while (ros::ok() && !PurePursuitWrapper.shutting_down_) {
     ros::spinOnce();

@@ -22,6 +22,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 
 // msgs
 #include <cav_msgs/SystemAlert.h>
@@ -61,10 +62,14 @@ class PurePursuitWrapper {
         std::mutex shutdown_mutex_;
         bool shutting_down_ = false;
 
+        // message filter subscribers
         message_filters::Subscriber<geometry_msgs::PoseStamped> pose_sub;
         message_filters::Subscriber<cav_msgs::TrajectoryPlan> trajectory_plan_sub;
+        
+        // SyncPolicy
+        typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseStamped, cav_msgs::TrajectoryPlan> SyncPolicy;
 
-        void TrajectoryPlanToWayPointHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp);
+        void TrajectoryPlanPoseHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp);
 
     private:
 
@@ -73,12 +78,9 @@ class PurePursuitWrapper {
 
         //@brief ROS subscribers.
         ros::Subscriber system_alert_sub_;
-        ros::Subscriber trajectory_plan_sub_;
 
         // @brief ROS publishers.
         ros::Publisher way_points_pub_;
-        // ros::Publisher current_pose_pub_;
-        ros::Publisher current_velocity_pub_;
         ros::Publisher system_alert_pub_;
 
         /*!
@@ -89,10 +91,8 @@ class PurePursuitWrapper {
 
         // @brief ROS subscriber handlers.
         void SystemAlertHandler(const cav_msgs::SystemAlert::ConstPtr& msg);
-        void TrajectoryPlanHandler(const cav_msgs::TrajectoryPlan::ConstPtr& msg);
 
         // @brief ROS pusblishers.
-        void PublisherForCurrentVelocity(geometry_msgs::TwistStamped& msg);
         void PublisherForWayPoints(autoware_msgs::Lane& msg);
 
         // Convert TrajectoryPlanPoint to Waypoint. This is used by TrajectoryPlanHandler.

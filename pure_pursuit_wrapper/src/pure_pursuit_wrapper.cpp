@@ -34,26 +34,26 @@ PurePursuitWrapper::~PurePursuitWrapper() {
 }
 
 void PurePursuitWrapper::Initialize() {
-  
   // SystemAlert Subscriber
   system_alert_sub_ = nh_.subscribe("system_alert", 10, &PurePursuitWrapper::SystemAlertHandler, this);
   // SystemAlert Publisher
   system_alert_pub_ = nh_.advertise<cav_msgs::SystemAlert>("system_alert", 10, true);
 
+  // Pose Subscriber
   pose_sub.subscribe(nh_, "/current_pose", 1);
+  // Trajectory Plan Subscriber
   trajectory_plan_sub.subscribe(nh_, "trajectory_plan", 1);
 
   // WayPoints Publisher
   way_points_pub_ = nh_.advertise<autoware_msgs::Lane>("/final_waypoints", 10, true);
-
 }
 
 bool PurePursuitWrapper::ReadParameters() {
   return true;
 }
 
-void PurePursuitWrapper::TrajectoryPlanToWayPointHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp){
-  ROS_INFO_STREAM("Received TrajectoryPlanCurrentPosecallback message");
+void PurePursuitWrapper::TrajectoryPlanPoseHandler(const geometry_msgs::PoseStamped::ConstPtr& pose, const cav_msgs::TrajectoryPlan::ConstPtr& tp){
+  ROS_DEBUG_STREAM("Received TrajectoryPlanCurrentPosecallback message");
     try {
       autoware_msgs::Lane lane;
       lane.header = tp->header;
@@ -73,9 +73,8 @@ void PurePursuitWrapper::TrajectoryPlanToWayPointHandler(const geometry_msgs::Po
 
 };
 
-
 autoware_msgs::Waypoint PurePursuitWrapper::TrajectoryPlanPointToWaypointConverter(geometry_msgs::PoseStamped pose, cav_msgs::TrajectoryPlanPoint tpp) {
-  ROS_INFO_STREAM("Convertering TrajectoryPlanPointToWaypoint");
+  ROS_DEBUG_STREAM("Convertering TrajectoryPlanPointToWaypoint");
 
   autoware_msgs::Waypoint waypoint;
 
@@ -87,7 +86,7 @@ autoware_msgs::Waypoint PurePursuitWrapper::TrajectoryPlanPointToWaypointConvert
   waypoint.twist.twist.linear.x = (pose.pose.position.x - tpp.x) / delta_t;
   waypoint.twist.twist.linear.y = (pose.pose.position.y - tpp.y) / delta_t;
 
-  ROS_INFO_STREAM("Finish Convertering TrajectoryPlanPointToWaypoint");
+  ROS_DEBUG_STREAM("Finish Convertering TrajectoryPlanPointToWaypoint");
 
   return waypoint;
 }
@@ -108,7 +107,7 @@ void PurePursuitWrapper::SystemAlertHandler(const cav_msgs::SystemAlert::ConstPt
 
 void PurePursuitWrapper::PublisherForWayPoints(autoware_msgs::Lane& msg){
   try {
-    ROS_INFO_STREAM("Sending WayPoints message.");
+    ROS_DEBUG_STREAM("Sending WayPoints message.");
     way_points_pub_.publish(msg);
   }
   catch(const std::exception& e) {
