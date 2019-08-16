@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="pp" default="false" />
-    <remap from="final_waypoints" to="carma_final_waypoints"/>
+  <!--  <remap from="final_waypoints" to="carma_final_waypoints"/> -->
     
     <group if="$(arg pp)">
         <param name="ctrl_type" value="pp"/>
