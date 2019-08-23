@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="pp" default="true" />
-    <remap from="final_waypoints" to="carma_final_waypoints"/> 
+    <arg name="pp" default="false" />
+    <remap from="final_waypoints" to="/guidance/carma_final_waypoints"/> 
     <group if="$(arg pp)"> 
         <param name="ctrl_type" value="pp"/>
         <include file="$(find waypoint_follower)/launch/pure_pursuit.launch"></include>
