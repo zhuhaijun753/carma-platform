@@ -4,7 +4,10 @@
     <remap from="final_waypoints" to="/guidance/carma_final_waypoints"/> 
     <group if="$(arg pp)"> 
         <param name="ctrl_type" value="pp"/>
-        <include file="$(find waypoint_follower)/launch/pure_pursuit.launch"></include>
+        <include file="$(find waypoint_follower)/launch/pure_pursuit.launch">
+         <arg name="is_linear_interpolation" value="True"/>
+         <arg name="publishes_for_steering_robot" value="True"/>
+        </include>
     </group>
 
     <group unless="$(arg pp)">
