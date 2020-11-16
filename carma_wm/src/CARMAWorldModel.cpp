@@ -420,8 +420,9 @@ lanelet::Optional<TrafficRulesConstPtr> CARMAWorldModel::getTrafficRules(const s
       
     carma_traffic_rules = std::static_pointer_cast<lanelet::traffic_rules::CarmaUSTrafficRules>(
     lanelet::traffic_rules::TrafficRulesPtr(std::move(traffic_rules)));
+    ROS_DEBUG_STREAM("config_speed_limit_: " << config_speed_limit_);
     carma_traffic_rules->setConfigSpeedLimit(config_speed_limit_);
-
+    ROS_DEBUG_STREAM("config_speed_limit_: " << config_speed_limit_);
 
     optional_ptr = std::static_pointer_cast<const lanelet::traffic_rules::CarmaUSTrafficRules>(
     carma_traffic_rules);

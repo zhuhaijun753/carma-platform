@@ -483,23 +483,24 @@ void addValidSpeedLimit(Lanelet& lanelet, lanelet::LaneletMapPtr map, lanelet::V
 {
   lanelet::Velocity max_speed;
     auto speed_limit = lanelet.regulatoryElementsAs<DigitalSpeedLimit>();
-     if(config_limit < 80_mph && config_limit > 0_mph)//Accounting for the configured speed limit, input zero when not in use
+    ROS_DEBUG_STREAM("Processing Speed Limit");
+     if(config_limit < MAX_SPEED_LIMIT && config_limit > 0_mph)//Accounting for the configured speed limit, input zero when not in use
       {  
         max_speed = config_limit;
       }
       else
       {
-        max_speed = 80_mph;
+        max_speed = MAX_SPEED_LIMIT;
       }
       
     // If the lanelet does not have a digital speed limit then add one with the maximum value of 80
     std::vector<std::string> allowed_participants;
-     //Maximum speed limit is 80
+     //Maximum speed limit is MAX_SPEED_LIMIT
    
 
     if (speed_limit.empty())//If there is no assigned speed limit value
     {
-
+      ROS_DEBUG_STREAM("Empty Speed Limit");
          for(const auto& rules : default_traffic_rules)
          {
             if (rules->canPass(lanelet))
@@ -520,6 +521,7 @@ void addValidSpeedLimit(Lanelet& lanelet, lanelet::LaneletMapPtr map, lanelet::V
   }
   else  //If the speed limit value already exists 
   {
+    ROS_DEBUG_STREAM("Found Speed Limit");
       for(const auto& rules : default_traffic_rules)
          {
             if (rules->canPass(lanelet))
@@ -529,7 +531,7 @@ void addValidSpeedLimit(Lanelet& lanelet, lanelet::LaneletMapPtr map, lanelet::V
         }
     if(speed_limit.back().get()->speed_limit_ > max_speed)//Check that speed limit value does not exceed the maximum value
     {
-    
+      
       ROS_WARN_STREAM("Invalid speed limit value. Value reset to maximum speed limit.");
       auto rar = std::make_shared<DigitalSpeedLimit>(DigitalSpeedLimit::buildData(lanelet::utils::getId(), max_speed, {lanelet},
       {}, allowed_participants));

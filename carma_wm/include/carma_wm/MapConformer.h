@@ -31,6 +31,7 @@
 #include <functional>
 #include <autoware_lanelet2_msgs/MapBin.h>
 #include <carma_utils/CARMAUtils.h>
+#include <hardcoded_params/control_limits/control_limits.h>
 
 using namespace lanelet::units::literals;
 
@@ -46,6 +47,8 @@ namespace lanelet
  */
 namespace MapConformer
 {
+const lanelet::Velocity MAX_SPEED_LIMIT = lanelet::Velocity(hardcoded_params::control_limits::MAX_LONGITUDINAL_VELOCITY_MPS * lanelet::units::MPS());
+
 /**
  * @brief Function modifies an existing map to make a best effort attempt at ensuring the map confroms to the
  * expectations of CarmaUSTrafficRules

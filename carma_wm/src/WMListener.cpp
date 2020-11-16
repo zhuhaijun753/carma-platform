@@ -37,7 +37,10 @@ WMListener::WMListener(bool multi_thread) : worker_(std::unique_ptr<WMListenerWo
   roadway_objects_sub_ = nh_.subscribe("roadway_objects", 1, &WMListenerWorker::roadwayObjectListCallback, worker_.get());
 
   double cL;
-  nh2_.getParam("config_speed_limit", cL);
+  if (!nh2_.getParam("/config_speed_limit", cL)) {
+    ROS_ERROR_STREAM("Failed to load config_speed_limit");
+  }
+  ROS_INFO_STREAM("Param Loaded - config_speed_limit: " << cL);
   setConfigSpeedLimit(cL);
   
 
@@ -95,6 +98,7 @@ std::unique_lock<std::mutex> WMListener::getLock(bool pre_locked)
 
 void WMListener::setConfigSpeedLimit(double config_lim) const
 {
+  const std::lock_guard<std::mutex> lock(mw_mutex_);
   worker_->setConfigSpeedLimit(config_lim);
 }
 
