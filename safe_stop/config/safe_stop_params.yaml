@@ -1,0 +1,17 @@
+# Float: The minimum trajectory length in seconds
+# system to proceed with execution
+# Unit: s
+min_trajectory_length: 6.0
+
+#Integer: Amount to downsample input lanelet centerline data
+#Corresponds to saving each nth point.
+#Unit: N/a
+downsample_ratio: 8.0
+
+#Double: Number of points to look ahead for speed reduction
+#Unit: N/a
+lookahead_count: 8
+
+#Double: Constant deceleration value for safe_stop at end of route
+#Unit:m/s^2
+deceleration_limit: 3.0
