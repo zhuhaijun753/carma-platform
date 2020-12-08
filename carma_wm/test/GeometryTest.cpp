@@ -22,7 +22,33 @@
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
+#include <lanelet2_core/primitives/Lanelet.h>
+#include <lanelet2_io/Io.h>
+#include <lanelet2_io/io_handlers/Factory.h>
+#include <lanelet2_io/io_handlers/Writer.h>
+#include <lanelet2_projection/UTM.h>
+#include <lanelet2_routing/RoutingGraph.h>
+#include <lanelet2_traffic_rules/TrafficRulesFactory.h>
+#include <lanelet2_core/Attribute.h>
+#include <lanelet2_core/geometry/LineString.h>
+#include <lanelet2_core/primitives/Traits.h>
+#include <lanelet2_extension/traffic_rules/CarmaUSTrafficRules.h>
+#include <lanelet2_extension/utility/query.h>
+#include <lanelet2_extension/utility/utilities.h>
+#include <lanelet2_extension/projection/local_frame_projector.h>
+#include <lanelet2_extension/io/autoware_osm_parser.h>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <utility> // std::pair
+#include <stdexcept> // std::runtime_error
+#include <sstream> // std::stringstream
+#include <string>
+#include <fstream>
+#include <vector>
+#include <utility>
+#include <gtest/gtest.h>
+#include <ros/ros.h>
 #include "TestHelpers.h"
 
 using ::testing::_;
@@ -31,9 +57,143 @@ using ::testing::DoAll;
 using ::testing::InSequence;
 using ::testing::Return;
 using ::testing::ReturnArg;
+using namespace lanelet::units::literals;
 
 namespace carma_wm
 {
+std::vector<std::pair<std::string, std::vector<double>>> read_csv(std::string filename){
+    // Reads a CSV file into a vector of <string, vector<int>> pairs where
+    // each pair represents <column name, column values>
+
+    // Create a vector of <string, int vector> pairs to store the result
+    std::vector<std::pair<std::string, std::vector<double>>> result;
+
+    // Create an input filestream
+    std::ifstream myFile(filename);
+
+    // Make sure the file is open
+    if(!myFile.is_open()) throw std::runtime_error("Could not open file");
+
+    // Helper vars
+    std::string line, colname;
+    double val;
+
+    // Read the column names
+    if(myFile.good())
+    {
+        // Extract the first line in the file
+        std::getline(myFile, line);
+
+        // Create a stringstream from line
+        std::stringstream ss(line);
+
+        // Extract each column name
+        while(std::getline(ss, colname, ',')){
+            
+            // Initialize and add <colname, int vector> pairs to result
+            result.push_back({colname, std::vector<double> {}});
+        }
+    }
+
+    // Read data, line by line
+    while(std::getline(myFile, line))
+    {
+        // Create a stringstream of the current line
+        std::stringstream ss(line);
+        
+        // Keep track of the current column index
+        int colIdx = 0;
+        
+        // Extract each integer
+        while(ss >> val){
+            
+            // Add the current integer to the 'colIdx' column's values vector
+            result.at(colIdx).second.push_back(val);
+            
+            // If the next token is a comma, ignore it and move on
+            if(ss.peek() == ',') ss.ignore();
+            
+            // Increment the column index
+            colIdx++;
+        }
+    }
+
+    // Close file
+    myFile.close();
+
+    return result;
+}
+
+void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<double>>> dataset){
+    // Make a CSV file with one or more columns of integer values
+    // Each column of data is represented by the pair <column name, column data>
+    //   as std::pair<std::string, std::vector<int>>
+    // The dataset is represented as a vector of these columns
+    // Note that all columns should be the same size
+    
+    // Create an output filestream object
+    std::ofstream myFile(filename);
+    
+    // Send column names to the stream
+    for(int j = 0; j < dataset.size(); ++j)
+    {
+        myFile << dataset.at(j).first;
+        if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
+    }
+    myFile << "\n";
+    
+    // Send data to the stream
+    for(int i = 0; i < dataset.at(0).second.size(); ++i)
+    {
+        for(int j = 0; j < dataset.size(); ++j)
+        {
+            myFile << dataset.at(j).second.at(i);
+            if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
+        }
+        myFile << "\n";
+    }
+    
+    // Close the file
+    myFile.close();
+}
+
+ TEST(RouteGeneratorTest, convert_waypoints)
+{
+
+    // CSV reading methods coppied from here: https://www.gormanalysis.com/blog/reading-and-writing-csv-files-with-cpp/
+
+    // File location of osm file
+    std::string wp_file = "../latlon_list.csv";    
+    auto data = read_csv(wp_file);
+
+    ROS_ERROR_STREAM("data size: " << data.size());
+
+    std::string target_frame = "+proj=tmerc +lat_0=39.46636844371259 +lon_0=-76.16919523566943 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +vunits=m +no_defs";
+    lanelet::projection::LocalFrameProjector local_projector(target_frame.c_str());
+
+    auto lat_vec = std::get<1>(data[1]);
+    auto lon_vec = std::get<1>(data[2]);
+
+    std::vector<double> x_vals;
+    std::vector<double> y_vals;
+    for (size_t i = 0; i < lat_vec.size(); i++) {
+        lanelet::GPSPoint p;
+        p.lat = lat_vec[i];
+        p.lon = lon_vec[i];
+        p.ele = 0;
+        lanelet::BasicPoint3d map_p;
+        map_p = local_projector.forward(p);
+        x_vals.push_back(map_p.x());
+        y_vals.push_back(map_p.y());
+    }
+
+    std::vector<std::pair<std::string, std::vector<double>>> output_data;
+    output_data.push_back(std::make_pair("x", x_vals));
+    output_data.push_back(std::make_pair("y", y_vals));
+
+    write_csv("../wp_list.csv", output_data);
+    
+}
 TEST(GeometryTest, computeCurvature)
 {
   // Check curvature of overlapping points
