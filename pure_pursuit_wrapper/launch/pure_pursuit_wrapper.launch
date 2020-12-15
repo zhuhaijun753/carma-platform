@@ -8,6 +8,8 @@
         <include file="$(find pure_pursuit)/launch/pure_pursuit.launch">
             <arg name="is_linear_interpolation" value="True"/>
             <arg name="publishes_for_steering_robot" value="True"/>
+	        <arg name="lookahead_ratio" value="0.5"/>
+            <arg name="minimum_lookahead_distance" value="6.7"/>
         </include>
     </group>
     <!-- Pure Pursuit Wrapper Node -->
