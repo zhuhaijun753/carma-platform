@@ -144,6 +144,7 @@ namespace stop_and_wait_plugin
 
         //ROS publishers and subscribers
         ros::Publisher plugin_discovery_pub_;
+        ros::Publisher jerk_pub_;
         ros::Subscriber pose_sub_;
         ros::Subscriber twist_sub_;
 
@@ -154,7 +155,7 @@ namespace stop_and_wait_plugin
         cav_msgs::Plugin plugin_discovery_msg_;
 
         //Calculated jerk for maneuver in m/s3
-        double jerk_;
+        double jerk_ =0;
         //Total time required to complete the maneuver
         double maneuver_time_;
 

@@ -98,34 +98,44 @@ namespace route_following_plugin
 
         //double total_maneuver_length = current_progress + mvr_duration_ * target_speed;
         double total_maneuver_length = wm_->routeTrackPos(shortest_path.back().centerline2d().back()).downtrack;
-        bool approaching_route_end = false;
-        double time_req_to_stop,stopping_dist;
-        time_req_to_stop = sqrt(2*target_speed/jerk_);
-        stopping_dist = target_speed*time_req_to_stop - (0.167 * jerk_ * pow(time_req_to_stop,3));
-        if(total_maneuver_length - current_progress <= stopping_dist){
-            approaching_route_end = true;
-        }
-        while(current_progress < total_maneuver_length && !approaching_route_end)
+        std::cout<<" Total maneuver length:"<<total_maneuver_length<<std::endl;
+        // bool approaching_route_end = false;
+        // double time_req_to_stop,stopping_dist;
+        // time_req_to_stop = sqrt(2*target_speed/jerk_);
+        // stopping_dist = target_speed*time_req_to_stop - (0.167 * jerk_ * pow(time_req_to_stop,3));
+        // if(total_maneuver_length - current_progress <= stopping_dist){
+        //     approaching_route_end = true;
+        // }
+        while(current_progress < total_maneuver_length && last_lanelet_index<shortest_path.size())
         {
             ROS_DEBUG_STREAM("Lanlet: " << shortest_path[last_lanelet_index].id());
             auto p = shortest_path[last_lanelet_index].centerline2d().back();
             double end_dist = wm_->routeTrackPos(shortest_path[last_lanelet_index].centerline2d().back()).downtrack;
             double dist_diff = end_dist - current_progress;
-            time_req_to_stop = sqrt(2*target_speed/jerk_);
-            stopping_dist = target_speed*time_req_to_stop - (0.167 * jerk_ * pow(time_req_to_stop,3));
+            // time_req_to_stop = sqrt(2*target_speed/jerk_);
+            // stopping_dist = target_speed*time_req_to_stop - (0.167 * jerk_ * pow(time_req_to_stop,3));
             
-            if(total_maneuver_length - end_dist <= stopping_dist){
-                end_dist -= stopping_dist;
-                dist_diff = end_dist - current_progress;
-                approaching_route_end = true;
+            // if(total_maneuver_length - end_dist <= stopping_dist){
+            //     end_dist -= stopping_dist;
+            //     dist_diff = end_dist - current_progress;
+            //     approaching_route_end = true;
+            // }
+            // if(end_dist < current_progress){
+            //     break;
+            // }
+            if(last_lanelet_index == shortest_path.size() -1)
+            {
+                resp.new_plan.maneuvers.push_back(
+                composeStopandWaitManeuverMessage(current_progress,total_maneuver_length,
+                speed_progress,shortest_path[last_lanelet_index].id(),
+                shortest_path[last_lanelet_index].id(),ros::Time::now(),16.0));
             }
-            if(end_dist < current_progress){
-                break;
-            }
+            else{
             resp.new_plan.maneuvers.push_back(
                 composeManeuverMessage(current_progress, end_dist,  
                                     speed_progress, target_speed, 
                                     shortest_path[last_lanelet_index].id(), ros::Time::now()));
+            }
             current_progress += dist_diff;
             speed_progress = target_speed;
             //get speed limit
@@ -152,10 +162,10 @@ namespace route_following_plugin
                 return true;
             }
         }
-        resp.new_plan.maneuvers.push_back(
-            composeStopandWaitManeuverMessage(current_progress,total_maneuver_length,
-            speed_progress,shortest_path[last_lanelet_index].id(),
-            shortest_path[last_lanelet_index].id(),ros::Time::now(),time_req_to_stop));
+        // resp.new_plan.maneuvers.push_back(
+        //     composeStopandWaitManeuverMessage(current_progress,total_maneuver_length,
+        //     speed_progress,shortest_path[last_lanelet_index].id(),
+        //     shortest_path[last_lanelet_index].id(),ros::Time::now(),time_req_to_stop));
         if(resp.new_plan.maneuvers.size() == 0)
         {
             ROS_WARN_STREAM("Cannot plan maneuver because no route is found");
@@ -203,6 +213,7 @@ namespace route_following_plugin
             maneuver_msg.lane_following_maneuver.end_time = current_time + ros::Duration((end_dist - current_dist) / (0.5 * cur_plus_target));
         }
         maneuver_msg.lane_following_maneuver.lane_id = std::to_string(lane_id);
+        std::cout<<"Lane follow for start dist:"<<current_dist<<" end_dist:"<<end_dist<<std::endl;
         return maneuver_msg;
     }
     cav_msgs::Maneuver RouteFollowingPlugin::composeStopandWaitManeuverMessage(double current_dist, double end_dist, double current_speed, int start_lane_id, int end_lane_id, ros::Time current_time, double end_time)
@@ -223,7 +234,7 @@ namespace route_following_plugin
             end_time = mvr_duration_;
         } 
         maneuver_msg.stop_and_wait_maneuver.end_time = current_time + ros::Duration(end_time);
-        
+        std::cout<<"Stop and Wait for start dist:"<<current_dist<<" end_dist:"<<end_dist<<std::endl;
         return maneuver_msg;
     }
     bool RouteFollowingPlugin::identifyLaneChange(lanelet::routing::LaneletRelations relations, int target_id)
@@ -266,3 +277,4 @@ namespace route_following_plugin
         return target_speed;
     }
 }
+
