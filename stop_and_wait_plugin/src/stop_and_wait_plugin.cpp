@@ -59,7 +59,7 @@ namespace stop_and_wait_plugin
         trajectory_srv_ = nh_->advertiseService("plan_trajectory",&StopandWait::plan_trajectory_cb, this);
         
         plugin_discovery_pub_ = nh_->advertise<cav_msgs::Plugin>("plugin_discovery",1);
-        jerk_pub_ = nh_->advertise<std_msgs::Float64>("jerk",jerk_);
+        jerk_pub_ = nh_->advertise<std_msgs::Float64>("jerk",1);
         plugin_discovery_msg_.name = "StopandWaitPlugin";
         plugin_discovery_msg_.versionId = "v1.0";
         plugin_discovery_msg_.available = true;
@@ -81,6 +81,9 @@ namespace stop_and_wait_plugin
         ros::CARMANodeHandle::setSpinCallback([this]() -> bool
         {
             plugin_discovery_pub_.publish(plugin_discovery_msg_);
+            std_msgs::Float64 jerk_msg;
+            jerk_msg.data = jerk_;
+            jerk_pub_.publish(jerk_msg);
             return true;
         });
     }
@@ -117,11 +120,19 @@ namespace stop_and_wait_plugin
             }
         }
 
+        if(current_downtrack < maneuver_plan[0].stop_and_wait_maneuver.start_dist || current_downtrack > maneuver_plan.back().stop_and_wait_maneuver.end_dist){
+            //Do nothing
+            return true;
+        }
         std::vector<PointSpeedPair> points_and_target_speeds = maneuvers_to_points(maneuver_plan, current_downtrack, wm_, req.vehicle_state);
 
         auto downsampled_points = 
             carma_utils::containers::downsample_vector(points_and_target_speeds,downsample_ratio_);
-
+        std::cout<<"Printing downsampled points"<<std::endl;
+        for(int i=0;i<downsampled_points.size();i++){
+            std::cout<<" Point x:"<<downsampled_points[i].point.x()<<" y:"<<downsampled_points[i].point.y()<<" speed:"<<downsampled_points[i].speed<<std::endl;
+        }
+        std::cout<<"\n";
         //Trajectory plan
         cav_msgs::TrajectoryPlan  trajectory;
         trajectory.header.frame_id = "map";
@@ -129,6 +140,11 @@ namespace stop_and_wait_plugin
         trajectory.trajectory_id = boost::uuids::to_string(boost::uuids::random_generator()());
 
         trajectory.trajectory_points = compose_trajectory_from_centerline(downsampled_points,req.vehicle_state);
+        std::cout<<"Printing Trajectory"<<std::endl;
+        for(int i=0;i<trajectory.trajectory_points.size();i++){
+        std::cout<<"Point x:"<<trajectory.trajectory_points[i].x<<" y:"<<trajectory.trajectory_points[i].y<<std::endl;
+        }
+        std::cout<<"\n";
         trajectory.initial_longitudinal_velocity = req.vehicle_state.longitudinal_vel;
         resp.trajectory_plan = trajectory;
         resp.related_maneuvers.push_back(cav_msgs::Maneuver::STOP_AND_WAIT);
@@ -154,15 +170,15 @@ namespace stop_and_wait_plugin
             cav_msgs::StopAndWaitManeuver stop_and_wait_maneuver= maneuver.stop_and_wait_maneuver;
 
             double starting_downtrack = stop_and_wait_maneuver.start_dist;  //starting downtrack recorded in message
-            if(first)   //check for first maneuver in vector 
-            {
-                if(starting_downtrack > max_starting_downtrack)
-                {
-                    starting_downtrack = max_starting_downtrack;
-                }
-                first = false;
+            // if(first)   //check for first maneuver in vector 
+            // {
+            //     if(starting_downtrack > max_starting_downtrack)
+            //     {
+            //         starting_downtrack = max_starting_downtrack;
+            //     }
+            //     first = false;
 
-            }
+            // }
            
             double ending_downtrack = stop_and_wait_maneuver.end_dist; 
             double start_speed = current_speed_;    //Get static value of current speed at start of planning
@@ -226,6 +242,9 @@ namespace stop_and_wait_plugin
                         visited_lanelets.insert(l.id());
                     }
                 }
+                lanelet::BasicPoint2d veh_point(state.X_pos_global, state.Y_pos_global);
+                double current_downtrack = wm_->routeTrackPos(veh_point).downtrack;
+                std::cout<<"Starting downtrack:"<<starting_downtrack<<" ending downtrack:"<<ending_downtrack<<" Current downtrack:"<<current_downtrack<<std::endl;
 
                 lanelet::BasicLineString2d route_geometry = carma_wm::geometry::concatenate_lanelets(lanelets_to_add);
                 int nearest_pt_index = getNearestRouteIndex(route_geometry,state);
