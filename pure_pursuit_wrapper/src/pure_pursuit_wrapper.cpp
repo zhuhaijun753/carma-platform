@@ -68,7 +68,7 @@ void PurePursuitWrapper::trajectoryPlanHandler(const cav_msgs::TrajectoryPlan::C
     wp.twist.twist.linear.x = speeds[i];
     ROS_DEBUG_STREAM("Setting waypoint idx: " << i <<", x: " << tp->trajectory_points[i].x << 
                             ", y: " << tp->trajectory_points[i].y <<
-                            ", speed: " << speeds[i]* 2.23694 << "mph");
+                            ", speed: " << speeds[i]* 2.23694 << "mph" << "  Tactical plugin:"<< tp->trajectory_points[i].planner_plugin_name);
     waypoints.push_back(wp);
   }
 
