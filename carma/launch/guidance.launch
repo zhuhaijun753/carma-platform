@@ -91,7 +91,7 @@
   <!-- Control Stack -->
   <!-- Waypoint Follower Config-->
   <node pkg="rostopic" type="rostopic" name="config_waypoint_follower_rostopic"
-        args="pub -l config/waypoint_follower autoware_config_msgs/ConfigWaypointFollower '{ header: auto, param_flag: 0, velocity: 5.0, lookahead_distance: 4.0, lookahead_ratio: 2.0, minimum_lookahead_distance: 6.0, displacement_threshold: 0.0, relative_angle_threshold: 0.0 }' "
+        args="pub -l config/waypoint_follower autoware_config_msgs/ConfigWaypointFollower '{ header: auto, param_flag: 0, velocity: 5.0, lookahead_distance: 4.0, lookahead_ratio: 1.75, minimum_lookahead_distance: 6.0, displacement_threshold: 0.0, relative_angle_threshold: 0.0 }' "
   />
 
   <!-- Trajectory Executor -->
@@ -102,9 +102,15 @@
   <remap from="/current_pose" to="$(optenv CARMA_LOCZ_NS)/current_pose"/>  
 
   <!-- Pure Pursuit Wrapper -->
-  
-  <include file="$(find pure_pursuit_wrapper)/launch/pure_pursuit_wrapper.launch" />
-  
+  <group>
+    <!-- <remap from="ctrl_raw" to="ctrl_raw_pp"/>
+    <remap from="twist_raw" to="fake_twist_raw"/> -->
+    <include file="$(find pure_pursuit_wrapper)/launch/pure_pursuit_wrapper.launch" />
+  </group>
+
+  <node pkg="carma_record" name="lane_control" type="scripts/lane_control.py"/>
+
+
   <!-- Pure Pursuit Jerk Wrapper -->
   <include file="$(find pure_pursuit_jerk_wrapper)/launch/pure_pursuit_jerk_wrapper.launch" />
 
