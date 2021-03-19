@@ -139,6 +139,9 @@ namespace stop_and_wait_plugin
         auto downsampled_points = 
             carma_utils::containers::downsample_vector(points_and_target_speeds,downsample_ratio_);
         ROS_DEBUG_STREAM("downsampled points size:"<<downsampled_points.size());
+        for(int i=0;i<downsampled_points.size();i++){
+            ROS_DEBUG_STREAM("Point x:"<<downsampled_points[i].point.x()<<" y:"<<downsampled_points[i].point.y()<<" Speed:"<<downsampled_points[i].speed);
+        }
         //Trajectory plan
         cav_msgs::TrajectoryPlan  trajectory;
         trajectory.header.frame_id = "map";
@@ -146,7 +149,10 @@ namespace stop_and_wait_plugin
         trajectory.trajectory_id = boost::uuids::to_string(boost::uuids::random_generator()());
       
         trajectory.trajectory_points = compose_trajectory_from_centerline(downsampled_points,curr_state);
-        ROS_DEBUG_STREAM("Trajectory points size:"<<trajectory.trajectory_points.size());
+        ROS_DEBUG_STREAM("Trajectory points size:"<<trajectory.trajectory_points.size());       
+        for(int i=0;i<trajectory.trajectory_points.size();i++){
+            ROS_DEBUG_STREAM("Point x:"<<trajectory.trajectory_points[i].x<<" y:"<<trajectory.trajectory_points[i].y);
+        }
         trajectory.initial_longitudinal_velocity = req.vehicle_state.longitudinal_vel;
         resp.trajectory_plan = trajectory;
         resp.related_maneuvers.push_back(cav_msgs::Maneuver::STOP_AND_WAIT);
@@ -232,11 +238,12 @@ namespace stop_and_wait_plugin
                     lanelet::BasicPoint2d curr_pose (pose_msg_.pose.position.x,pose_msg_.pose.position.y);
                     double current_downtrack = wm_->routeTrackPos(curr_pose).downtrack;
                     //stay approximately at crawl speed until within destination downtrack range (defined in route)
+                    //Route completed within 10m of end point; SSC commands a stop at 0.4m/s
                     if(start_speed <= min_crawl_speed_ && current_downtrack < ending_downtrack - destination_downtrack_range_){
-                        jerk_ = 0.0;
+                        jerk_ = 0.0;// No slow down
                     }
                     else{
-                        jerk_ = jerk_req;
+                        jerk_ = 2.0;//Apply as much jerk as you can 
                     }
                 }
                 //get all the lanelets in between starting and ending downtrack on shortest path
