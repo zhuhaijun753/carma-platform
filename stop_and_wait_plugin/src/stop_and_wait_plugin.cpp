@@ -140,7 +140,7 @@ namespace stop_and_wait_plugin
             carma_utils::containers::downsample_vector(points_and_target_speeds,downsample_ratio_);
         ROS_DEBUG_STREAM("downsampled points size:"<<downsampled_points.size());
         for(int i=0;i<downsampled_points.size();i++){
-            ROS_DEBUG_STREAM("Point x:"<<downsampled_points[i].point.x()<<" y:"<<downsampled_points[i].point.y()<<" Speed:"<<downsampled_points[i].speed);
+            ROS_DEBUG_STREAM("Point x:"<<downsampled_points[i].point.x()<<" y:"<<downsampled_points[i].point.y()<<" Speed:"<<downsampled_points[i].speed<<" Expected long acceleration(change):"<<jerk_*delta_time_*i);
         }
         //Trajectory plan
         cav_msgs::TrajectoryPlan  trajectory;
@@ -312,7 +312,7 @@ namespace stop_and_wait_plugin
                 curr_time += delta_time;
                 points_and_target_speeds.push_back(pair);
             }
-            
+            delta_time_ = delta_time;
         }
         
         return points_and_target_speeds;

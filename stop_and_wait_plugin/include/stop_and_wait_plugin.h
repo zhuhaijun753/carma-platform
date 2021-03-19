@@ -130,6 +130,8 @@ namespace stop_and_wait_plugin
        //current vehicle forward speed
         double current_speed_;
 
+        double delta_time_ =0;//ONLY FOR DEBUGGING
+
         //wm listener pointer and pointer to the actual wm object
         std::shared_ptr<carma_wm::WMListener> wml_;
         carma_wm::WorldModelConstPtr wm_;
