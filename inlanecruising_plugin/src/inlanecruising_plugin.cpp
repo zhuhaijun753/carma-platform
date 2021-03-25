@@ -75,6 +75,8 @@ bool InLaneCruisingPlugin::plan_trajectory_cb(cav_srvs::PlanTrajectoryRequest& r
       maneuver_plan.push_back(req.maneuver_plan.maneuvers[i]);
     }
   }
+  ROS_DEBUG_STREAM("-ILC Maneuvers in Plan: " << maneuver_plan.size());
+  ROS_DEBUG_STREAM("-current_downtrack: " << current_downtrack);
   auto points_and_target_speeds = maneuvers_to_points(maneuver_plan, std::max((double)0, current_downtrack - config_.back_distance), wm_); // Convert maneuvers to points
 
   ROS_DEBUG_STREAM("points_and_target_speeds: " << points_and_target_speeds.size());
@@ -503,6 +505,8 @@ std::vector<PointSpeedPair> InLaneCruisingPlugin::maneuvers_to_points(const std:
     }
 
     ROS_DEBUG_STREAM("Used downtrack: " << starting_downtrack);
+    
+    ROS_DEBUG_STREAM("-End dist of maneuver: " << lane_following_maneuver.end_dist);
 
     auto lanelets = wm->getLaneletsBetween(starting_downtrack, lane_following_maneuver.end_dist, true);
 
