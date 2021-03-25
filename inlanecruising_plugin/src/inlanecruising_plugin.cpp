@@ -513,6 +513,9 @@ std::vector<PointSpeedPair> InLaneCruisingPlugin::maneuvers_to_points(const std:
     ROS_DEBUG_STREAM("Maneuver");
 
     lanelet::BasicLineString2d downsampled_centerline;
+
+    ROS_DEBUG_STREAM("-Lanelets in Maneuver Plan: " << lanelets.size());
+
     downsampled_centerline.reserve(200);
 
     for (auto l : lanelets)
