@@ -124,13 +124,13 @@ namespace stop_and_wait_plugin
             }
         }
 
-        if(current_downtrack < maneuver_plan[0].stop_and_wait_maneuver.start_dist){
+        if(current_downtrack < maneuver_plan[0].stop_and_wait_maneuver.start_dist){ // COMMENT: it should plan anyway here...
             //Do nothing
             return true;
         }
 
 
-        std::vector<PointSpeedPair> points_and_target_speeds = maneuvers_to_points(maneuver_plan, current_downtrack, wm_, req.vehicle_state);
+        std::vector<PointSpeedPair> points_and_target_speeds = maneuvers_to_points(maneuver_plan, current_downtrack, wm_, req.vehicle_state); // current_downtrack and vehicle_state are inconsistent
 
         auto downsampled_points = 
             carma_utils::containers::downsample_vector(points_and_target_speeds,downsample_ratio_);
@@ -179,10 +179,11 @@ namespace stop_and_wait_plugin
             }
            
             double ending_downtrack = stop_and_wait_maneuver.end_dist; 
-            double start_speed = current_speed_;    //Get static value of current speed at start of planning
+            double start_speed = current_speed_;    //Get static value of current speed at start of planning // COMMENT This should be vehicle_state long_velocity
             //maneuver_time_ = ros::Duration(stop_and_wait_maneuver.end_time - stop_and_wait_maneuver.start_time).toSec();
             
-            maneuver_time_ = (3*(ending_downtrack - starting_downtrack))/(2*start_speed);
+            maneuver_time_ = (3*(ending_downtrack - starting_downtrack))/(2*start_speed); // COMMENT calculated from constant jerk equations
+                                                                                           // assuming zero initial accel and 0 velocity final
 
             double delta_time, curr_time;
             if(start_speed < epsilon_ )  //If at end_dist return zero speed trajectory
@@ -202,25 +203,26 @@ namespace stop_and_wait_plugin
                     points_and_target_speeds.push_back(pair);
                     curr_time += delta_time;
 
-                    points_and_target_speeds.push_back(pair);
+                    points_and_target_speeds.push_back(pair); // COMMENT what about here, BUG small
+
                 }
             }
             else
             {
                 double jerk_req = (2*start_speed)/pow(maneuver_time_,2);
 
-                if(jerk_req > max_jerk_limit_)
+                if(jerk_req > max_jerk_limit_) // COMMENT because maneuver time assumptions of zero accel, we maybe getting more and more jerks and hitting this criteria.
                 {
                     //unsafe to stop at the required jerk - reset to max_jerk and go beyond the maneuver end_dist
                     jerk_ = max_jerk_limit_;  
-                    double travel_dist_new = start_speed * maneuver_time_ - (0.167 * jerk_ * pow(maneuver_time_,3));
+                    double travel_dist_new = start_speed * maneuver_time_ - (0.167 * jerk_ * pow(maneuver_time_,3)); //COMMENT maneuver_time is not consistent with old and new jerk
                     ending_downtrack = travel_dist_new + starting_downtrack;
 
                     auto shortest_path = wm_->getRoute()->shortestPath();
                     if(ending_downtrack > wm_->getRouteEndTrackPos().downtrack)
                     {
                         ROS_ERROR("Ending distance is beyond known route");
-                        throw std::invalid_argument("Ending distance is beyond known route"); 
+                        // throw std::invalid_argument("Ending distance is beyond known route"); 
                     }
                 }
                 else {

@@ -46,7 +46,7 @@ namespace route_following_plugin
         
         pnh_->param<double>("minimal_maneuver_duration", mvr_duration_, 16.0);
         pnh2_->param<double>("config_speed_limit",config_limit);
-        pnh_->param<double>("/guidance/route_end_jerk", jerk_, 0.05);
+        pnh_->param<double>("/guidance/route_end_jerk", jerk_, 0.05); // needs to private namespace
         wml_.reset(new carma_wm::WMListener());
         // set world model point form wm listener
         wm_ = wml_->getWorldModel();
@@ -104,7 +104,7 @@ namespace route_following_plugin
 
         bool approaching_route_end = false;
         double time_req_to_stop,stopping_dist;
-        time_req_to_stop = sqrt(2*findSpeedLimit(shortest_path.back())/jerk_); 
+        time_req_to_stop = sqrt(2*findSpeedLimit(shortest_path.back())/jerk_); // ASSUMPTION here is that we are traveling the speed limit at the end oof the roure
         stopping_dist = findSpeedLimit(shortest_path.back())*time_req_to_stop - (0.167 * jerk_ * pow(time_req_to_stop,3));
         
         if(route_length - current_progress <= stopping_dist){
@@ -137,7 +137,7 @@ namespace route_following_plugin
 
             resp.new_plan.maneuvers.push_back(
                 composeManeuverMessage(current_progress, end_dist,  
-                                    speed_progress, target_speed, 
+                                    speed_progress, target_speed,                           // target speed should change with lanelet
                                     shortest_path[last_lanelet_index].id(), time_progress));
             current_progress += dist_diff;
             time_progress = resp.new_plan.maneuvers.back().lane_following_maneuver.end_time;
