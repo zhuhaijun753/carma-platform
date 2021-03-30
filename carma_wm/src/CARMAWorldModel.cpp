@@ -241,6 +241,9 @@ std::vector<lanelet::ConstLanelet> CARMAWorldModel::getLaneletsBetween(double st
   {
     throw std::invalid_argument("Start distance is greater than or equal to end distance");
   }
+  ROS_DEBUG_STREAM("Beginning getLaneletsBetween()");
+  ROS_DEBUG_STREAM("Maneuver Starting Downtrack : " << start);
+  ROS_DEBUG_STREAM("Maneuver Ending Downtrack: " << end);
 
   std::vector<lanelet::ConstLanelet> output;
   std::priority_queue<LaneletDowntrackPair,  std::vector<LaneletDowntrackPair>, std::greater<LaneletDowntrackPair>> prioritized_lanelets;
@@ -248,9 +251,12 @@ std::vector<lanelet::ConstLanelet> CARMAWorldModel::getLaneletsBetween(double st
   auto lanelet_map = route_->laneletMap();
   for (lanelet::ConstLanelet lanelet : lanelet_map->laneletLayer)
   {
+    ROS_DEBUG_STREAM("Searching for Lanelet " << lanelet.id());
     if (shortest_path_only && !shortest_path_view_->laneletLayer.exists(lanelet.id())) {
+      ROS_DEBUG_STREAM("Skipping Lanelet " << lanelet.id());
       continue; // Continue if we are only evaluating the shortest path and this lanelet is not part of it
     }
+    ROS_DEBUG_STREAM("Evaluating Lanelet " << lanelet.id());
     lanelet::ConstLineString2d centerline = lanelet::utils::to2D(lanelet.centerline());
 
     auto front = centerline.front();
@@ -258,12 +264,18 @@ std::vector<lanelet::ConstLanelet> CARMAWorldModel::getLaneletsBetween(double st
     TrackPos min = routeTrackPos(front);
     TrackPos max = routeTrackPos(back);
 
+    // Max (Track Start, Vehicle) > Min (Track End, Maneuver End)
     if (std::max(min.downtrack, start) > std::min(max.downtrack, end))
     {  // Check for 1d intersection
       // No intersection so continue
+      ROS_DEBUG_STREAM("Skipping Lanelet " << lanelet.id());
+      ROS_DEBUG_STREAM("Maneuver Start: " << start << ", End: " << end);
+      ROS_DEBUG_STREAM("Track Start: " << min.downtrack << ", End: " << max.downtrack);
+      ROS_DEBUG_STREAM("End");
       continue;
     }
     // Intersection has occurred so add lanelet to list
+    ROS_DEBUG_STREAM("Adding Lanelet " << lanelet.id());
     LaneletDowntrackPair pair(lanelet, min.downtrack);
     prioritized_lanelets.push(pair);
   }
