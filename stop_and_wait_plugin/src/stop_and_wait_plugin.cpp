@@ -78,7 +78,7 @@ namespace stop_and_wait_plugin
         pnh_->param<double>("min_timestep",min_timestep_);
         pnh_->param<double>("min_jerk", min_jerk_limit_);
         pnh_->param<double>("/guidance/destination_downtrack_range",destination_downtrack_range_);
-
+        
         ros::CARMANodeHandle::setSpinCallback([this]() -> bool
         {
             plugin_discovery_pub_.publish(plugin_discovery_msg_);
@@ -104,7 +104,11 @@ namespace stop_and_wait_plugin
     
     void StopandWait::twist_cb(const geometry_msgs::TwistStampedConstPtr& msg)
     {
+        prev_speed_ = current_speed_;
         current_speed_ = msg->twist.linear.x;
+        initial_accel_ = current_speed_ - prev_speed_;
+        if (initial_accel_ > 0) // car should be slowing down, but may give positive accel due to noise
+            initial_accel_ = 0;
     }
     
     bool StopandWait::plan_trajectory_cb(cav_srvs::PlanTrajectoryRequest& req, cav_srvs::PlanTrajectoryResponse& resp)
@@ -124,17 +128,13 @@ namespace stop_and_wait_plugin
             }
         }
 
-        if(current_downtrack < maneuver_plan[0].stop_and_wait_maneuver.start_dist){
+        if(current_downtrack < maneuver_plan[0].stop_and_wait_maneuver.start_dist){ // COMMENT: it should plan anyway here...
             //Do nothing
             return true;
         }
 
-        // Update state to correctly reflect current pos
-        auto curr_state = req.vehicle_state;
-        curr_state.X_pos_global = pose_msg_.pose.position.x;
-        curr_state.Y_pos_global = pose_msg_.pose.position.y;
 
-        std::vector<PointSpeedPair> points_and_target_speeds = maneuvers_to_points(maneuver_plan, current_downtrack, wm_, curr_state);
+        std::vector<PointSpeedPair> points_and_target_speeds = maneuvers_to_points(maneuver_plan, current_downtrack, wm_, req.vehicle_state); // current_downtrack and vehicle_state are inconsistent
 
         auto downsampled_points = 
             carma_utils::containers::downsample_vector(points_and_target_speeds,downsample_ratio_);
@@ -145,7 +145,7 @@ namespace stop_and_wait_plugin
         trajectory.header.stamp = ros::Time::now();
         trajectory.trajectory_id = boost::uuids::to_string(boost::uuids::random_generator()());
       
-        trajectory.trajectory_points = compose_trajectory_from_centerline(downsampled_points,curr_state);
+        trajectory.trajectory_points = compose_trajectory_from_centerline(downsampled_points,req.vehicle_state);
         ROS_DEBUG_STREAM("Trajectory points size:"<<trajectory.trajectory_points.size());
         trajectory.initial_longitudinal_velocity = req.vehicle_state.longitudinal_vel;
         resp.trajectory_plan = trajectory;
@@ -183,10 +183,15 @@ namespace stop_and_wait_plugin
             }
            
             double ending_downtrack = stop_and_wait_maneuver.end_dist; 
-            double start_speed = current_speed_;    //Get static value of current speed at start of planning
+            double start_speed = current_speed_;    //Get static value of current speed at start of planning // COMMENT This should be vehicle_state long_velocity
             //maneuver_time_ = ros::Duration(stop_and_wait_maneuver.end_time - stop_and_wait_maneuver.start_time).toSec();
-            
-            maneuver_time_ = (3*(ending_downtrack - starting_downtrack))/(2*start_speed);
+        
+            /*
+            maneuver_time_ = (3*(ending_downtrack - starting_downtrack))/(2*start_speed); // COMMENT calculated from constant jerk equations
+                                                                                           // assuming zero initial accel and 0 velocity final
+            */
+            double initial_accel_copy =initial_accel_;
+            maneuver_time_ = calc_maneuver_time(ending_downtrack, starting_downtrack, initial_accel_copy, start_speed);
 
             double delta_time, curr_time;
             if(start_speed < epsilon_ )  //If at end_dist return zero speed trajectory
@@ -206,25 +211,27 @@ namespace stop_and_wait_plugin
                     points_and_target_speeds.push_back(pair);
                     curr_time += delta_time;
 
-                    points_and_target_speeds.push_back(pair);
+                    points_and_target_speeds.push_back(pair); // COMMENT what about here, BUG small
+
                 }
             }
             else
             {
-                double jerk_req = (2*start_speed)/pow(maneuver_time_,2);
-
-                if(jerk_req > max_jerk_limit_)
+                //double jerk_req = (2*start_speed)/pow(maneuver_time_,2);OLD
+                double jerk_req = 2*(start_speed + initial_accel_*maneuver_time_)/pow(maneuver_time_,2); // we use positive jerk in our calcs as we know it is actually negative
+                ROS_DEBUG_STREAM("new_jerk: " <<jerk_req );
+                if(std::fabs(jerk_req) > max_jerk_limit_) // COMMENT because maneuver time assumptions of zero accel, we maybe getting more and more jerks and hitting this criteria.
                 {
                     //unsafe to stop at the required jerk - reset to max_jerk and go beyond the maneuver end_dist
                     jerk_ = max_jerk_limit_;  
-                    double travel_dist_new = start_speed * maneuver_time_ - (0.167 * jerk_ * pow(maneuver_time_,3));
+                    double travel_dist_new = start_speed * maneuver_time_ + 1/2*initial_accel_*pow(maneuver_time_,2)- (0.167 * jerk_ * pow(maneuver_time_,3)); //COMMENT maneuver_time is not consistent with old and new jerk
                     ending_downtrack = travel_dist_new + starting_downtrack;
 
                     auto shortest_path = wm_->getRoute()->shortestPath();
                     if(ending_downtrack > wm_->getRouteEndTrackPos().downtrack)
                     {
                         ROS_ERROR("Ending distance is beyond known route");
-                        throw std::invalid_argument("Ending distance is beyond known route"); 
+                        // throw std::invalid_argument("Ending distance is beyond known route"); 
                     }
                 }
                 else {
@@ -254,11 +261,16 @@ namespace stop_and_wait_plugin
 
                 lanelet::BasicLineString2d route_geometry = carma_wm::geometry::concatenate_lanelets(lanelets_to_add);
                 int nearest_pt_index = getNearestRouteIndex(route_geometry,state);
+                // route end point index
                 auto temp_state = state;
-                temp_state.X_pos_global = wm_->getRoute()->getEndPoint().basicPoint2d().x();
-                temp_state.Y_pos_global =  wm_->getRoute()->getEndPoint().basicPoint2d().y();
-                int nearest_end_pt_index = getNearestRouteIndex(route_geometry,temp_state);
-                lanelet::BasicLineString2d future_route_geometry(route_geometry.begin() + nearest_pt_index, route_geometry.begin()+ nearest_end_pt_index);
+                
+                // maneuver end dist index
+                int ending_downtrack_pt_index = (int)(route_geometry.size() * (ending_downtrack / wm_->getRoute()->length2d()));
+                ROS_DEBUG_STREAM("ending_downtrack: " << ending_downtrack);
+                ROS_DEBUG_STREAM("ending_downtrack_pt_index" << ending_downtrack_pt_index);
+                ROS_DEBUG_STREAM("nearest_pt_index" << nearest_pt_index);
+
+                lanelet::BasicLineString2d future_route_geometry(route_geometry.begin() + nearest_pt_index, route_geometry.begin()+ ending_downtrack_pt_index);
                 
                 int points_count = future_route_geometry.size();
                 delta_time = maneuver_time_/(points_count-1);
@@ -471,5 +483,39 @@ namespace stop_and_wait_plugin
             speeds->push_back(p.speed);
         }
     }
+    
+    double StopandWait::calc_maneuver_time(const double& ending_downtrack, const double& starting_downtrack, const double& initial_accel, const double& start_speed)
+    {
+        double maneuver_time = 0.0;
+        try
+        {
+            //more accurate calculation
+            double first_var = -2*start_speed/initial_accel;
+            ROS_INFO_STREAM("first_var:" << first_var);
+            double second_var = sqrt(4*pow(start_speed,2)/pow(initial_accel,2) - 6*(ending_downtrack - starting_downtrack)/initial_accel);
+            ROS_INFO_STREAM("second_var:" << second_var);
+            double answer1 = first_var - second_var;
+            ROS_INFO_STREAM("answer1:" << answer1);            
+            double answer2 = first_var + second_var;
+            ROS_INFO_STREAM("answer2:" << answer2);
+            maneuver_time = std::max(answer1, answer2);
+            ROS_DEBUG_STREAM("maneuver_time:" << maneuver_time);
+            if (maneuver_time <= 0 )
+            {
+                ROS_ERROR_STREAM("maneuver_time is negative, using 0 initial_accel");
+                ROS_ERROR_STREAM("Here are the maneuver_time's required values, " << ending_downtrack << ", " << starting_downtrack  << ", " << initial_accel << ", "<< start_speed);
+                maneuver_time = (3*(ending_downtrack - starting_downtrack))/(2*start_speed);
+            }
+        }
+        catch(const std::exception& e)
+        {
+            ROS_ERROR_STREAM("it was not possible to calculate the maneuver_time with values, " << ending_downtrack << ", " << starting_downtrack  << ", " << initial_accel << ", "<< start_speed);
+            maneuver_time = (3*(ending_downtrack - starting_downtrack))/(2*start_speed); // COMMENT calculated from constant jerk equations
+                                                                                           // assuming zero initial accel and 0 velocity final
+            initial_accel_ = 0.0;
+        }
+        return maneuver_time;
+    }
+    
 
 }

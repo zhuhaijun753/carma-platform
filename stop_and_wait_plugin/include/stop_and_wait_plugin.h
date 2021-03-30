@@ -127,9 +127,13 @@ namespace stop_and_wait_plugin
          */
         void speed_to_time(const std::vector<double>& downtrack, const std::vector<double>& speeds,std::vector<double>& times, double jerk) const;
 
-       //current vehicle forward speed
-        double current_speed_;
+        double calc_maneuver_time(const double& ending_downtrack, const double& starting_downtrack, const double& initial_accel, const double& start_speed);
 
+       //current vehicle forward speed
+        double prev_speed_;
+        double current_speed_;
+        double initial_accel_;
+        
         //wm listener pointer and pointer to the actual wm object
         std::shared_ptr<carma_wm::WMListener> wml_;
         carma_wm::WorldModelConstPtr wm_;
