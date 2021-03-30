@@ -218,13 +218,13 @@ namespace stop_and_wait_plugin
             else
             {
                 //double jerk_req = (2*start_speed)/pow(maneuver_time_,2);OLD
-                double jerk_req = 2*(-start_speed - initial_accel_*maneuver_time_)/pow(maneuver_time_,2);
+                double jerk_req = 2*(start_speed + initial_accel_*maneuver_time_)/pow(maneuver_time_,2); // we use positive jerk in our calcs as we know it is actually negative
                 ROS_DEBUG_STREAM("new_jerk: " <<jerk_req );
                 if(std::fabs(jerk_req) > max_jerk_limit_) // COMMENT because maneuver time assumptions of zero accel, we maybe getting more and more jerks and hitting this criteria.
                 {
                     //unsafe to stop at the required jerk - reset to max_jerk and go beyond the maneuver end_dist
                     jerk_ = max_jerk_limit_;  
-                    double travel_dist_new = start_speed * maneuver_time_ - (0.167 * jerk_ * pow(maneuver_time_,3)); //COMMENT maneuver_time is not consistent with old and new jerk
+                    double travel_dist_new = start_speed * maneuver_time_ + 1/2*initial_accel_*pow(maneuver_time_,2)- (0.167 * jerk_ * pow(maneuver_time_,3)); //COMMENT maneuver_time is not consistent with old and new jerk
                     ending_downtrack = travel_dist_new + starting_downtrack;
 
                     auto shortest_path = wm_->getRoute()->shortestPath();
