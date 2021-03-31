@@ -492,7 +492,7 @@ namespace stop_and_wait_plugin
             //more accurate calculation
             double first_var = -2*start_speed/initial_accel;
             ROS_INFO_STREAM("first_var:" << first_var);
-            double second_var = sqrt(4*pow(start_speed,2)/pow(initial_accel,2) - 6*(ending_downtrack - starting_downtrack)/initial_accel);
+            double second_var = sqrt(4*pow(start_speed,2)/pow(initial_accel,2) + 6*(ending_downtrack - starting_downtrack)/initial_accel);
             ROS_INFO_STREAM("second_var:" << second_var);
             double answer1 = first_var - second_var;
             ROS_INFO_STREAM("answer1:" << answer1);            
