@@ -230,7 +230,7 @@ namespace stop_and_wait_plugin
                     auto shortest_path = wm_->getRoute()->shortestPath();
                     if(ending_downtrack > wm_->getRouteEndTrackPos().downtrack)
                     {
-                        ROS_ERROR("Ending distance is beyond known route");
+                        ROS_DEBUG_STREAM("Ending distance is beyond known route");
                         // throw std::invalid_argument("Ending distance is beyond known route"); 
                     }
                 }
@@ -498,18 +498,18 @@ namespace stop_and_wait_plugin
             ROS_INFO_STREAM("answer1:" << answer1);            
             double answer2 = first_var + second_var;
             ROS_INFO_STREAM("answer2:" << answer2);
-            maneuver_time = std::max(answer1, answer2);
+            maneuver_time = std::min(answer1, answer2);
             ROS_DEBUG_STREAM("maneuver_time:" << maneuver_time);
             if (maneuver_time <= 0 )
             {
-                ROS_ERROR_STREAM("maneuver_time is negative, using 0 initial_accel");
-                ROS_ERROR_STREAM("Here are the maneuver_time's required values, " << ending_downtrack << ", " << starting_downtrack  << ", " << initial_accel << ", "<< start_speed);
+                ROS_DEBUG_STREAM("maneuver_time is negative, using 0 initial_accel");
+                ROS_DEBUG_STREAM("Here are the maneuver_time's required values, " << ending_downtrack << ", " << starting_downtrack  << ", " << initial_accel << ", "<< start_speed);
                 maneuver_time = (3*(ending_downtrack - starting_downtrack))/(2*start_speed);
             }
         }
         catch(const std::exception& e)
         {
-            ROS_ERROR_STREAM("it was not possible to calculate the maneuver_time with values, " << ending_downtrack << ", " << starting_downtrack  << ", " << initial_accel << ", "<< start_speed);
+            ROS_DEBUG_STREAM("it was not possible to calculate the maneuver_time with values, " << ending_downtrack << ", " << starting_downtrack  << ", " << initial_accel << ", "<< start_speed);
             maneuver_time = (3*(ending_downtrack - starting_downtrack))/(2*start_speed); // COMMENT calculated from constant jerk equations
                                                                                            // assuming zero initial accel and 0 velocity final
             initial_accel_ = 0.0;
