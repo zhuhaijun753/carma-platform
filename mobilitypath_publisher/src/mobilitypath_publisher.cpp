@@ -122,7 +122,6 @@ namespace mobilitypath_publisher
                     offset.offset_z = (new_point.ecef_z - prev_point.ecef_z) * 100;
                     prev_point = new_point;
                     traj.offsets.push_back(offset);
-                
             }
         }
         
@@ -138,11 +137,13 @@ namespace mobilitypath_publisher
 
     cav_msgs::LocationECEF MobilityPathPublication::TrajectoryPointtoECEF(const cav_msgs::TrajectoryPlanPoint& traj_point, const geometry_msgs::TransformStamped& tf) const{
         cav_msgs::LocationECEF ecef_point;    
+        
+        tf2::Transform transform;
+        tf2::fromMsg(tf, transform);
 
-        ecef_point.ecef_x = traj_point.x + tf.transform.translation.x;
-        ecef_point.ecef_y = traj_point.y + tf.transform.translation.y;
-        ecef_point.ecef_z = 0.0 + tf.transform.translation.z;
-       
+        auto traj_point_vec = tf2::Vector3(traj_point.x, traj_point.y, 0.0);
+        auto ecef_point = transform * traj_point_vec;
+        
         return ecef_point;
     } 
     
