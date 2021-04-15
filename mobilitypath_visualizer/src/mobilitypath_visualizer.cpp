@@ -47,6 +47,12 @@ namespace mobilitypath_visualizer {
         nh_.reset(new ros::CARMANodeHandle());
         pnh_.reset(new ros::CARMANodeHandle("~"));
         pnh_->param<double>("spin_rate", spin_rate_, 10.0);
+        pnh_->param<double>("x", x_, 1.0);
+        pnh_->param<double>("y", y_, 1.0);
+        pnh_->param<double>("z", z_, 1.0);
+        pnh_->param<double>("t", t_, 10.0);
+
+
         nh_->getParam("/vehicle_id", host_id_);
 
         // init publishers
@@ -96,15 +102,15 @@ namespace mobilitypath_visualizer {
         visualization_msgs::MarkerArray output;
         
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "earth";
+        marker.header.frame_id = "map";
         marker.header.stamp = ros::Time((double)msg.header.timestamp/1000.0); //milliseconds to sec
         marker.type = visualization_msgs::Marker::ARROW;
         marker.action = visualization_msgs::Marker::ADD;
         marker.ns = "mobilitypath_visualizer";
 
-        marker.scale.x = 2.0;
-        marker.scale.y = 2.0;
-        marker.scale.z = 1.0;
+        marker.scale.x = x_;
+        marker.scale.y = y_;
+        marker.scale.z = z_;
         marker.frame_locked = true;
 
         marker.color.r = color.red;
@@ -165,15 +171,17 @@ namespace mobilitypath_visualizer {
     {
         visualization_msgs::MarkerArray output;
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "earth";
+        marker.header.frame_id = "map";
         marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         marker.action = visualization_msgs::Marker::ADD;
         marker.ns = "mobilitypath_visualizer";
 
-        marker.scale.z = 0.5;
+        marker.scale.x = x_;
+        marker.scale.y = x_;
+        marker.scale.z = x_;
         marker.color.a = 1.0;
         marker.frame_locked = true;
-        marker.lifetime = ros::Duration(2);
+        marker.lifetime = ros::Duration(t_);
         for (auto const& cav_marker: cav_markers)
         {
             size_t idx = 0;
@@ -185,6 +193,7 @@ namespace mobilitypath_visualizer {
                     marker.pose.position.x = cav_marker.markers[idx].points[0].x;
                     marker.pose.position.y = cav_marker.markers[idx].points[0].y;
                     marker.pose.position.z = cav_marker.markers[idx].points[0].z;
+                    marker.pose.orientation.w = 1.0f;
 
                     marker.text = "Collision in " + std::to_string((cav_marker.markers[idx].header.stamp - marker.header.stamp).toSec())+ "s!";
                     output.markers.push_back(marker);
@@ -302,6 +311,13 @@ namespace mobilitypath_visualizer {
         host_marker_pub_.publish(host_marker_);
         
         // publish cav markers
+        auto host_marker_tmp = host_marker_;
+        for (auto& marker : host_marker_tmp.markers)
+        {
+            marker.color.b = 1.0f;
+            marker.color.g = 0.0f;
+        }
+        cav_markers_.push_back(host_marker_tmp);
         for (auto const &marker: cav_markers_)
         {
             cav_marker_pub_.publish(marker);

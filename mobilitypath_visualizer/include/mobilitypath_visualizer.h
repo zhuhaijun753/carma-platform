@@ -122,6 +122,12 @@ namespace mobilitypath_visualizer {
         std::string host_id_;
         bool host_marker_received_ = false;
 
+        double x_;
+        double y_;
+        double z_;
+        double t_;
+
+
     };
 
 }
