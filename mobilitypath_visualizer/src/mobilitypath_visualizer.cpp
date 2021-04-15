@@ -213,7 +213,7 @@ namespace mobilitypath_visualizer {
                 marker.pose.position.z = cav_marker.markers[idx-1].points[1].z;
 
                 
-                marker.text = "Collision in " + std::to_string((cav_marker.markers[idx-1].header.stamp + ros::Duration(0.1) - host_marker.markers[idx].header.stamp).toSec())+ "s!";
+                marker.text = "Collision in " + std::to_string((cav_marker.markers[idx-1].header.stamp + ros::Duration(0.1) - host_marker.markers[idx-1].header.stamp).toSec())+ "s!";
                 output.markers.push_back(marker);
             }
         }
@@ -319,6 +319,7 @@ namespace mobilitypath_visualizer {
         {
             marker.color.b = 1.0f;
             marker.color.g = 0.0f;
+            marker.header.stamp -= ros::Duration(0.5);
         }
         cav_markers_ = {};
         cav_markers_.push_back(host_marker_tmp);
