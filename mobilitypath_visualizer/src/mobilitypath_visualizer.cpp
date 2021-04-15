@@ -192,7 +192,7 @@ namespace mobilitypath_visualizer {
             {
                 if (compute_2d_distance(cav_marker.markers[idx].points[0], host_marker.markers[idx].points[0]) <= 1.0) // within 1 meter
                 {
-                    marker.header.stamp = ros::Time::now();
+                    marker.header.stamp = host_marker.markers[idx].header.stamp;
                     marker.pose.position.x = cav_marker.markers[idx].points[0].x;
                     marker.pose.position.y = cav_marker.markers[idx].points[0].y;
                     marker.pose.position.z = cav_marker.markers[idx].points[0].z;
@@ -207,7 +207,7 @@ namespace mobilitypath_visualizer {
             
             if (compute_2d_distance(cav_marker.markers[idx-1].points[1], host_marker.markers[idx-1].points[1]) <= 1.0) // within 1 meter
             {
-                marker.header.stamp = ros::Time::now();
+                marker.header.stamp = host_marker.markers[idx-1].header.stamp;
                 marker.pose.position.x = cav_marker.markers[idx-1].points[1].x;
                 marker.pose.position.y = cav_marker.markers[idx-1].points[1].y;
                 marker.pose.position.z = cav_marker.markers[idx-1].points[1].z;

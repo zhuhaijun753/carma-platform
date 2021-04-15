@@ -66,8 +66,8 @@ namespace trajectory_visualizer {
         marker.ns = "trajectory_visualizer";
 
 
-        marker.scale.x = 2;
-        marker.scale.y = 2;
+        marker.scale.x = 0.5;
+        marker.scale.y = 0.5;
         marker.scale.z = 1;
         marker.frame_locked = true;
 
