@@ -177,8 +177,11 @@ namespace mobilitypath_visualizer {
         marker.ns = "mobilitypath_visualizer";
 
         marker.scale.x = x_;
-        marker.scale.y = x_;
-        marker.scale.z = x_;
+        marker.scale.y = y_;
+        marker.scale.z = z_;
+        marker.color.r = 1.0;
+        marker.color.g = 1.0;
+        marker.color.b = 1.0;
         marker.color.a = 1.0;
         marker.frame_locked = true;
         marker.lifetime = ros::Duration(t_);
@@ -195,7 +198,7 @@ namespace mobilitypath_visualizer {
                     marker.pose.position.z = cav_marker.markers[idx].points[0].z;
                     marker.pose.orientation.w = 1.0f;
 
-                    marker.text = "Collision in " + std::to_string((cav_marker.markers[idx].header.stamp - marker.header.stamp).toSec())+ "s!";
+                    marker.text = "Collision in " + std::to_string((cav_marker.markers[idx].header.stamp - host_marker.markers[idx].header.stamp).toSec())+ "s!";
                     output.markers.push_back(marker);
                 }
                 idx++;
@@ -210,7 +213,7 @@ namespace mobilitypath_visualizer {
                 marker.pose.position.z = cav_marker.markers[idx-1].points[1].z;
 
                 
-                marker.text = "Collision in " + std::to_string((cav_marker.markers[idx-1].header.stamp + ros::Duration(0.1) - marker.header.stamp).toSec())+ "s!";
+                marker.text = "Collision in " + std::to_string((cav_marker.markers[idx-1].header.stamp + ros::Duration(0.1) - host_marker.markers[idx].header.stamp).toSec())+ "s!";
                 output.markers.push_back(marker);
             }
         }
