@@ -214,7 +214,7 @@ namespace mobilitypath_visualizer {
                 output.markers.push_back(marker);
             }
         }
-        
+        ROS_DEBUG_STREAM("Output size" << output.markers.size());
         return output;
     }
 
@@ -317,6 +317,7 @@ namespace mobilitypath_visualizer {
             marker.color.b = 1.0f;
             marker.color.g = 0.0f;
         }
+        cav_markers_ = {};
         cav_markers_.push_back(host_marker_tmp);
         for (auto const &marker: cav_markers_)
         {
@@ -325,10 +326,7 @@ namespace mobilitypath_visualizer {
 
         // publish label
         label_marker_ = composeLabelMarker(host_marker_, cav_markers_);
-        for (auto const &marker: label_marker_.markers)
-        {
-            label_marker_pub_.publish(marker);
-        }
+        label_marker_pub_.publish(label_marker_);
 
         return true;
     }
