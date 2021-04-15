@@ -102,7 +102,7 @@ namespace mobilitypath_visualizer {
         visualization_msgs::MarkerArray output;
         
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "map";
+        marker.header.frame_id = "earth";
         marker.header.stamp = ros::Time((double)msg.header.timestamp/1000.0); //milliseconds to sec
         marker.type = visualization_msgs::Marker::ARROW;
         marker.action = visualization_msgs::Marker::ADD;
@@ -171,7 +171,7 @@ namespace mobilitypath_visualizer {
     {
         visualization_msgs::MarkerArray output;
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "map";
+        marker.header.frame_id = "earth";
         marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         marker.action = visualization_msgs::Marker::ADD;
         marker.ns = "mobilitypath_visualizer";
