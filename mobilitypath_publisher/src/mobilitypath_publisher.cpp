@@ -105,7 +105,11 @@ namespace mobilitypath_publisher
 
     cav_msgs::Trajectory MobilityPathPublication::TrajectoryPlantoTrajectory(const std::vector<cav_msgs::TrajectoryPlanPoint>& traj_points, const geometry_msgs::TransformStamped& tf) const{
         cav_msgs::Trajectory traj;
-        cav_msgs::LocationECEF ecef_location = TrajectoryPointtoECEF(traj_points[0], tf); //m to cm to fit the msg standard
+
+        tf2::Stamped<tf2::Transform> transform;
+        tf2::fromMsg(tf, transform);
+
+        cav_msgs::LocationECEF ecef_location = TrajectoryPointtoECEF(traj_points[0], transform); //m to cm to fit the msg standard
 
         if (traj_points.size()<2){
             ROS_WARN("Received Trajectory Plan is too small");
@@ -115,13 +119,13 @@ namespace mobilitypath_publisher
             cav_msgs::LocationECEF prev_point = ecef_location;
             for (size_t i=1; i<traj_points.size(); i++){
                 
-                    cav_msgs::LocationOffsetECEF offset;
-                    cav_msgs::LocationECEF new_point = TrajectoryPointtoECEF(traj_points[i], tf); //m to cm to fit the msg standard
-                    offset.offset_x = new_point.ecef_x - prev_point.ecef_x;  
-                    offset.offset_y = new_point.ecef_y - prev_point.ecef_y;
-                    offset.offset_z = 0; //should be zero difference between points
-                    prev_point = new_point;
-                    traj.offsets.push_back(offset);
+                cav_msgs::LocationOffsetECEF offset;
+                cav_msgs::LocationECEF new_point = TrajectoryPointtoECEF(traj_points[i], transform); //m to cm to fit the msg standard
+                offset.offset_x = new_point.ecef_x - prev_point.ecef_x;  
+                offset.offset_y = new_point.ecef_y - prev_point.ecef_y;
+                offset.offset_z = 0; //should be zero difference between points
+                prev_point = new_point;
+                traj.offsets.push_back(offset);
             }
         }
     
@@ -132,11 +136,8 @@ namespace mobilitypath_publisher
 
 
 
-    cav_msgs::LocationECEF MobilityPathPublication::TrajectoryPointtoECEF(const cav_msgs::TrajectoryPlanPoint& traj_point, const geometry_msgs::TransformStamped& tf) const{
+    cav_msgs::LocationECEF MobilityPathPublication::TrajectoryPointtoECEF(const cav_msgs::TrajectoryPlanPoint& traj_point, const tf2::Transform& transform) const{
         cav_msgs::LocationECEF ecef_point;    
-        
-        tf2::Stamped<tf2::Transform> transform;
-        tf2::fromMsg(tf, transform);
         
         auto traj_point_vec = tf2::Vector3(traj_point.x, traj_point.y, 0.0);
         tf2::Vector3 ecef_point_vec = transform * traj_point_vec;

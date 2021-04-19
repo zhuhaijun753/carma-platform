@@ -97,7 +97,7 @@ namespace mobilitypath_publisher
 
     
         // Convert Trajectory Point to ECEF Transform
-        cav_msgs::LocationECEF TrajectoryPointtoECEF(const cav_msgs::TrajectoryPlanPoint& traj_point, const geometry_msgs::TransformStamped& tf) const;
+        cav_msgs::LocationECEF TrajectoryPointtoECEF(const cav_msgs::TrajectoryPlanPoint& traj_point, const tf2::Transform& transform) const;
 
         // sender's static ID which is its license plate
         std::string sender_id = "USDOT-49096";
