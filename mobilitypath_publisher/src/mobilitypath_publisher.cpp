@@ -123,7 +123,7 @@ namespace mobilitypath_publisher
                 cav_msgs::LocationECEF new_point = TrajectoryPointtoECEF(traj_points[i], transform); //m to cm to fit the msg standard
                 offset.offset_x = new_point.ecef_x - prev_point.ecef_x;  
                 offset.offset_y = new_point.ecef_y - prev_point.ecef_y;
-                offset.offset_z = 0; //should be zero difference between points
+                offset.offset_z = new_point.ecef_z - prev_point.ecef_z;
                 prev_point = new_point;
                 traj.offsets.push_back(offset);
             }
@@ -142,6 +142,7 @@ namespace mobilitypath_publisher
         auto traj_point_vec = tf2::Vector3(traj_point.x, traj_point.y, 0.0);
         tf2::Vector3 ecef_point_vec = transform * traj_point_vec;
         ecef_point.ecef_x = (int32_t)(ecef_point_vec.x() * 100.0); // m to cm
+        ROS_ERROR_STREAM(std::to_string(ecef_point.ecef_x));
         ecef_point.ecef_y = (int32_t)(ecef_point_vec.y() * 100.0);
         ecef_point.ecef_z = (int32_t)(ecef_point_vec.z() * 100.0); 
 
