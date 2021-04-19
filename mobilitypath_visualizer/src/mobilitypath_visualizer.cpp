@@ -149,12 +149,12 @@ namespace mobilitypath_visualizer {
 
             marker.points = {};
             arrow_start = arrow_end;
-            ROS_DEBUG_STREAM("Arrow start- x: " << arrow_start.x << ", y:" << arrow_start.y << ", z:" << arrow_start.z);
+            ROS_DEBUG_STREAM("Arrow start- x: " << std::to_string(arrow_start.x) << ", y:" << std::to_string(arrow_start.y) << ", z:" << std::to_string(arrow_start.z));
 
             arrow_end.x = arrow_start.x + (double)(msg.trajectory.offsets[i].offset_x/ 100.0); //cm to m
             arrow_end.y = arrow_start.y + (double)(msg.trajectory.offsets[i].offset_y/ 100.0);
             arrow_end.z = arrow_start.z + (double)(msg.trajectory.offsets[i].offset_z/ 100.0);
-            ROS_DEBUG_STREAM("Arrow end- x: " << arrow_end.x << ", y:" << arrow_end.y  << ", z:" << arrow_end.z);
+            ROS_DEBUG_STREAM("Arrow end- x: " << std::to_string(arrow_end.x) << ", y:" << std::to_string(arrow_end.y)  << ", z:" << std::to_string(arrow_end.z));
 
             marker.points.push_back(arrow_start);
             marker.points.push_back(arrow_end);

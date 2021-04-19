@@ -119,7 +119,7 @@ namespace mobilitypath_publisher
                     cav_msgs::LocationECEF new_point = TrajectoryPointtoECEF(traj_points[i], tf); //m to cm to fit the msg standard
                     offset.offset_x = new_point.ecef_x - prev_point.ecef_x;  
                     offset.offset_y = new_point.ecef_y - prev_point.ecef_y;
-                    offset.offset_z = new_point.ecef_z - prev_point.ecef_z;
+                    offset.offset_z = 0; //should be zero difference between points
                     prev_point = new_point;
                     traj.offsets.push_back(offset);
             }
