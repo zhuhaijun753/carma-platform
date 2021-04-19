@@ -140,9 +140,9 @@ namespace mobilitypath_publisher
         
         auto traj_point_vec = tf2::Vector3(traj_point.x, traj_point.y, 0.0);
         tf2::Vector3 ecef_point_vec = transform * traj_point_vec;
-        ecef_point.ecef_x = ecef_point_vec.x() * 100; // m to cm
-        ecef_point.ecef_y = ecef_point_vec.y() * 100;
-        ecef_point.ecef_z = ecef_point_vec.z() * 100; 
+        ecef_point.ecef_x = (int32_t)(ecef_point_vec.x() * 100.0); // m to cm
+        ecef_point.ecef_y = (int32_t)(ecef_point_vec.y() * 100.0);
+        ecef_point.ecef_z = (int32_t)(ecef_point_vec.z() * 100.0); 
 
         return ecef_point;
     } 
