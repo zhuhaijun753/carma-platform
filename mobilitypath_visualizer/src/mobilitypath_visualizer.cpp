@@ -123,14 +123,14 @@ namespace mobilitypath_visualizer {
         marker.id = 0;
         geometry_msgs::Point arrow_start;
          
-        arrow_start.x = (double)msg.trajectory.location.ecef_x /100.0; //cm to m
-        arrow_start.y = (double)msg.trajectory.location.ecef_y /100.0;
-        arrow_start.z = (double)msg.trajectory.location.ecef_z /100.0;
+        arrow_start.x = (double)(msg.trajectory.location.ecef_x /100.0); //cm to m
+        arrow_start.y = (double)(msg.trajectory.location.ecef_y /100.0);
+        arrow_start.z = (double)(msg.trajectory.location.ecef_z /100.0);
 
         geometry_msgs::Point arrow_end;
-        arrow_end.x = (double)(msg.trajectory.location.ecef_x + msg.trajectory.offsets[0].offset_x) / 100.0; //cm to m
-        arrow_end.y = (double)(msg.trajectory.location.ecef_y + msg.trajectory.offsets[0].offset_y) / 100.0;
-        arrow_end.z = (double)(msg.trajectory.location.ecef_z + msg.trajectory.offsets[0].offset_z) / 100.0;
+        arrow_end.x = (double)((msg.trajectory.location.ecef_x + msg.trajectory.offsets[0].offset_x) / 100.0); //cm to m
+        arrow_end.y = (double)((msg.trajectory.location.ecef_y + msg.trajectory.offsets[0].offset_y) / 100.0);
+        arrow_end.z = (double)((msg.trajectory.location.ecef_z + msg.trajectory.offsets[0].offset_z) / 100.0);
         arrow_end = arrow_end;
 
         marker.points.push_back(arrow_start);
@@ -151,9 +151,9 @@ namespace mobilitypath_visualizer {
             arrow_start = arrow_end;
             ROS_DEBUG_STREAM("Arrow start- x: " << arrow_start.x << ", y:" << arrow_start.y << ", z:" << arrow_start.z);
 
-            arrow_end.x = arrow_start.x + (double)(msg.trajectory.offsets[i].offset_x)/ 100.0; //cm to m
-            arrow_end.y = arrow_start.y + (double)(msg.trajectory.offsets[i].offset_y)/ 100.0;
-            arrow_end.z = arrow_start.z + (double)(msg.trajectory.offsets[i].offset_z)/ 100.0;
+            arrow_end.x = arrow_start.x + (double)(msg.trajectory.offsets[i].offset_x/ 100.0); //cm to m
+            arrow_end.y = arrow_start.y + (double)(msg.trajectory.offsets[i].offset_y/ 100.0);
+            arrow_end.z = arrow_start.z + (double)(msg.trajectory.offsets[i].offset_z/ 100.0);
             ROS_DEBUG_STREAM("Arrow end- x: " << arrow_end.x << ", y:" << arrow_end.y  << ", z:" << arrow_end.z);
 
             marker.points.push_back(arrow_start);
@@ -192,7 +192,7 @@ namespace mobilitypath_visualizer {
             {
                 if (compute_2d_distance(cav_marker.markers[idx].points[0], host_marker.markers[idx].points[0]) <= 1.0) // within 1 meter
                 {
-                    marker.header.stamp = host_marker.markers[idx].header.stamp;
+                    //marker.header.stamp = host_marker.markers[idx].header.stamp;
                     marker.pose.position.x = cav_marker.markers[idx].points[0].x;
                     marker.pose.position.y = cav_marker.markers[idx].points[0].y;
                     marker.pose.position.z = cav_marker.markers[idx].points[0].z;
@@ -207,7 +207,7 @@ namespace mobilitypath_visualizer {
             
             if (compute_2d_distance(cav_marker.markers[idx-1].points[1], host_marker.markers[idx-1].points[1]) <= 1.0) // within 1 meter
             {
-                marker.header.stamp = host_marker.markers[idx-1].header.stamp;
+                //marker.header.stamp = host_marker.markers[idx-1].header.stamp;
                 marker.pose.position.x = cav_marker.markers[idx-1].points[1].x;
                 marker.pose.position.y = cav_marker.markers[idx-1].points[1].y;
                 marker.pose.position.z = cav_marker.markers[idx-1].points[1].z;
