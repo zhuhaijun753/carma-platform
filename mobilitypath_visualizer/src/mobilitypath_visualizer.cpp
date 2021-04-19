@@ -80,21 +80,33 @@ namespace mobilitypath_visualizer {
             return;
         }
         latest_cav_mob_path_msg_[msg.header.sender_id] = msg;
+         try
+        {
+            tf2::convert(tf2_buffer_.lookupTransform("earth", "map", ros::Time(0)).transform, map_in_earth_); 
+            MarkerColor cav_color;
+            if (msg.header.sender_id.compare(host_id_) ==0)
+            {
+                cav_color.green = 1.0;
+                host_marker_ = composeVisualizationMarker(msg,cav_color);
+                cav_color.green = 0.0;
+                cav_color.blue = 1.0;
+                debug_marker_ = composeVisualizationMarkerDebug(msg,cav_color, map_in_earth_);
+                host_marker_received_ = true;
+                ROS_DEBUG_STREAM("Composed host marker successfuly!");
+            }
+            else
+            {
+                cav_color.blue = 1.0;
+                cav_markers_.push_back(composeVisualizationMarker(msg,cav_color));
+                ROS_DEBUG_STREAM("Composed cav marker successfuly! with sender_id: " << msg.header.sender_id);
+            }
+        }
+        catch (tf2::TransformException &ex)
+        {
+            ROS_WARN("%s", ex.what());
+        }
+
         
-        MarkerColor cav_color;
-        if (msg.header.sender_id.compare(host_id_) ==0)
-        {
-            cav_color.green = 1.0;
-            host_marker_ = composeVisualizationMarker(msg,cav_color);
-            host_marker_received_ = true;
-            ROS_DEBUG_STREAM("Composed host marker successfuly!");
-        }
-        else
-        {
-            cav_color.blue = 1.0;
-            cav_markers_.push_back(composeVisualizationMarker(msg,cav_color));
-            ROS_DEBUG_STREAM("Composed cav marker successfuly! with sender_id: " << msg.header.sender_id);
-        }
     }
 
     visualization_msgs::MarkerArray MobilityPathVisualizer::composeVisualizationMarker(const cav_msgs::MobilityPath& msg, const MarkerColor& color)
@@ -166,6 +178,107 @@ namespace mobilitypath_visualizer {
         
         return output;
     }
+
+    visualization_msgs::MarkerArray MobilityPathVisualizer::composeVisualizationMarkerDebug(const cav_msgs::MobilityPath& msg, const MarkerColor& color, const tf2::Transform& map_in_earth)
+    {
+        visualization_msgs::MarkerArray output;
+        
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = "map";
+        marker.header.stamp = ros::Time((double)msg.header.timestamp/1000.0);
+        marker.type = visualization_msgs::Marker::ARROW;
+        marker.action = visualization_msgs::Marker::ADD;
+        marker.ns = "mobilitypath_visualizer";
+
+        marker.scale.x = x_;
+        marker.scale.y = y_;
+        marker.scale.z = z_;
+        marker.frame_locked = true;
+
+        marker.color.r = color.red;
+        marker.color.g = color.green;
+        marker.color.b = color.blue;
+        marker.color.a = 1.0f;
+        
+        size_t count = std::max(prev_marker_list_size_[msg.header.sender_id], msg.trajectory.offsets.size());
+
+        auto curr_location_msg = msg; //variable to update on each iteration as offsets are measured since last traj point
+        
+        marker.id = 0;
+        geometry_msgs::Point arrow_start;
+        cav_msgs::LocationECEF point; //in cm
+        point.ecef_x = curr_location_msg.trajectory.location.ecef_x;
+        point.ecef_y = curr_location_msg.trajectory.location.ecef_y;
+        point.ecef_z = curr_location_msg.trajectory.location.ecef_z;
+        ROS_ERROR_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
+        arrow_start = ECEFToMapPoint(point,map_in_earth); //also convert from cm to m
+        ROS_ERROR_STREAM("Map- DEBUG x: " << arrow_start.x << ", y:" << arrow_start.y);
+
+        geometry_msgs::Point arrow_end;
+        point.ecef_x = curr_location_msg.trajectory.location.ecef_x + msg.trajectory.offsets[0].offset_x;
+        point.ecef_y = curr_location_msg.trajectory.location.ecef_y + msg.trajectory.offsets[0].offset_y;
+        point.ecef_z = curr_location_msg.trajectory.location.ecef_z + msg.trajectory.offsets[0].offset_z;
+        arrow_end = ECEFToMapPoint(point,map_in_earth); //also convert from cm to m
+
+        marker.points.push_back(arrow_start);
+        marker.points.push_back(arrow_end);
+
+        curr_location_msg.trajectory.location = point;
+        output.markers.push_back(marker);
+
+        for (size_t i = 1; i < count; i++) // start id = 1 to comply with arrow marker type
+        {
+            marker.id = i;
+            marker.header.stamp += ros::Duration(0.1);
+
+            if (i >= msg.trajectory.offsets.size()) { // If we need to delete previous points
+                marker.action = visualization_msgs::Marker::DELETE;
+            }
+
+            marker.points = {};
+            point.ecef_x = (curr_location_msg.trajectory.location.ecef_x); //offset has been added on prev iteration
+            point.ecef_y = (curr_location_msg.trajectory.location.ecef_y); 
+            point.ecef_z = (curr_location_msg.trajectory.location.ecef_z);
+            arrow_start = ECEFToMapPoint(point,map_in_earth); //convert from cm to m
+            ROS_ERROR_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
+            ROS_ERROR_STREAM("Map- DEBUG x: " << arrow_start.x << ", y:" << arrow_start.y);
+
+            point.ecef_x = curr_location_msg.trajectory.location.ecef_x + msg.trajectory.offsets[i].offset_x;
+            point.ecef_y = curr_location_msg.trajectory.location.ecef_y + msg.trajectory.offsets[i].offset_y;
+            point.ecef_z = curr_location_msg.trajectory.location.ecef_z + msg.trajectory.offsets[i].offset_z;
+            arrow_end = ECEFToMapPoint(point,map_in_earth);
+
+            marker.points.push_back(arrow_start);
+            marker.points.push_back(arrow_end);
+
+            curr_location_msg.trajectory.location = point;
+            output.markers.push_back(marker);
+        }
+        ROS_ERROR_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
+        ROS_ERROR_STREAM("Map- DEBUG x: " << arrow_end.x << ", y:" << arrow_end.y);
+        prev_marker_list_size_[msg.header.sender_id] = msg.trajectory.offsets.size();
+        
+        return output;
+    }
+
+    geometry_msgs::Point MobilityPathVisualizer::ECEFToMapPoint(const cav_msgs::LocationECEF& ecef_point, const tf2::Transform& map_in_earth) const
+    {
+        geometry_msgs::Point output;
+        // convert input point to transform
+        tf2::Transform point_in_earth;
+        tf2::Quaternion no_rotation(0, 0, 0, 1);
+        tf2::Vector3 input_point {(double)ecef_point.ecef_x/100.0, (double)ecef_point.ecef_y/100.0, (double)ecef_point.ecef_z/100.0};
+        point_in_earth.setOrigin(input_point);
+        point_in_earth.setRotation(no_rotation);
+        // convert to map frame by (T_e_m)^(-1) * T_e_p
+        auto point_in_map = map_in_earth.inverse() * point_in_earth;
+        output.x = point_in_map.getOrigin().getX();
+        output.y = point_in_map.getOrigin().getY();
+        output.z = point_in_map.getOrigin().getZ();
+
+        return output;
+    } 
+    
 
     visualization_msgs::MarkerArray MobilityPathVisualizer::composeLabelMarker(const visualization_msgs::MarkerArray& host_marker, const std::vector<visualization_msgs::MarkerArray>& cav_markers)
     {
@@ -314,6 +427,7 @@ namespace mobilitypath_visualizer {
         host_marker_pub_.publish(host_marker_);
         
         // publish cav markers
+        /*
         auto host_marker_tmp = host_marker_;
         for (auto& marker : host_marker_tmp.markers)
         {
@@ -321,8 +435,9 @@ namespace mobilitypath_visualizer {
             marker.color.g = 0.0f;
             marker.header.stamp -= ros::Duration(0.5);
         }
+        */
         cav_markers_ = {};
-        cav_markers_.push_back(host_marker_tmp);
+        cav_markers_.push_back(debug_marker_);
         for (auto const &marker: cav_markers_)
         {
             cav_marker_pub_.publish(marker);
