@@ -212,9 +212,9 @@ namespace mobilitypath_visualizer {
         point.ecef_x = curr_location_msg.trajectory.location.ecef_x;
         point.ecef_y = curr_location_msg.trajectory.location.ecef_y;
         point.ecef_z = curr_location_msg.trajectory.location.ecef_z;
-        ROS_ERROR_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
+        ROS_DEBUG_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
         arrow_start = ECEFToMapPoint(point,map_in_earth); //also convert from cm to m
-        ROS_ERROR_STREAM("Map- DEBUG x: " << arrow_start.x << ", y:" << arrow_start.y);
+        ROS_DEBUG_STREAM("Map- DEBUG x: " << arrow_start.x << ", y:" << arrow_start.y);
 
         geometry_msgs::Point arrow_end;
         point.ecef_x = curr_location_msg.trajectory.location.ecef_x + msg.trajectory.offsets[0].offset_x;
@@ -242,8 +242,8 @@ namespace mobilitypath_visualizer {
             point.ecef_y = (curr_location_msg.trajectory.location.ecef_y); 
             point.ecef_z = (curr_location_msg.trajectory.location.ecef_z);
             arrow_start = ECEFToMapPoint(point,map_in_earth); //convert from cm to m
-            ROS_ERROR_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
-            ROS_ERROR_STREAM("Map- DEBUG x: " << arrow_start.x << ", y:" << arrow_start.y);
+            ROS_DEBUG_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
+            ROS_DEBUG_STREAM("Map- DEBUG x: " << arrow_start.x << ", y:" << arrow_start.y);
 
             point.ecef_x = curr_location_msg.trajectory.location.ecef_x + msg.trajectory.offsets[i].offset_x;
             point.ecef_y = curr_location_msg.trajectory.location.ecef_y + msg.trajectory.offsets[i].offset_y;
@@ -256,8 +256,8 @@ namespace mobilitypath_visualizer {
             curr_location_msg.trajectory.location = point;
             output.markers.push_back(marker);
         }
-        ROS_ERROR_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
-        ROS_ERROR_STREAM("Map- DEBUG x: " << arrow_end.x << ", y:" << arrow_end.y);
+        ROS_DEBUG_STREAM("ECEF- DEBUG x: " << point.ecef_x << ", y:" << point.ecef_y);
+        ROS_DEBUG_STREAM("Map- DEBUG x: " << arrow_end.x << ", y:" << arrow_end.y);
         prev_marker_list_size_[msg.header.sender_id] = msg.trajectory.offsets.size();
         
         return output;
