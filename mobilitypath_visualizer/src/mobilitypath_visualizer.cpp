@@ -71,7 +71,7 @@ namespace mobilitypath_visualizer {
     {
         if (msg.header.timestamp == 0) //if empty
             return;
-        ROS_DEBUG_STREAM("Received a msg from sender: " << msg.header.sender_id << ", and plan id:" << msg.header.plan_id << ", for receiver:" 
+        ROS_ERROR_STREAM("Received a msg from sender: " << msg.header.sender_id << ", and plan id:" << msg.header.plan_id << ", for receiver:" 
                             << msg.header.recipient_id << ", time:" << msg.header.timestamp << ", at now: " << std::to_string(ros::Time::now().toSec()));
 
         if (latest_cav_mob_path_msg_.find(msg.header.sender_id) != latest_cav_mob_path_msg_.end() &&
@@ -84,7 +84,7 @@ namespace mobilitypath_visualizer {
         latest_cav_mob_path_msg_[msg.header.sender_id] = msg;
          try
         {
-            tf2::convert(tf2_buffer_.lookupTransform("earth", "map", ros::Time(0)).transform, map_in_earth_); 
+            tf2::convert(tf2_buffer_.lookupTransform("map", "map", ros::Time(0)).transform, map_in_earth_); 
             MarkerColor cav_color;
             if (msg.header.sender_id.compare(host_id_) ==0)
             {
@@ -116,7 +116,7 @@ namespace mobilitypath_visualizer {
         visualization_msgs::MarkerArray output;
         
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "earth";
+        marker.header.frame_id = "map";
         marker.header.stamp = ros::Time((double)msg.header.timestamp/1000.0); //milliseconds to sec
         marker.type = visualization_msgs::Marker::ARROW;
         marker.action = visualization_msgs::Marker::ADD;
@@ -286,7 +286,8 @@ namespace mobilitypath_visualizer {
     {
         visualization_msgs::MarkerArray output;
         visualization_msgs::Marker marker;
-        marker.header.frame_id = "earth";
+        marker.header.stamp = ros::Time();
+        marker.header.frame_id = "map";
         marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         marker.action = visualization_msgs::Marker::ADD;
         marker.ns = "mobilitypath_visualizer";
@@ -302,37 +303,56 @@ namespace mobilitypath_visualizer {
         marker.lifetime = ros::Duration(t_);
         for (auto const& cav_marker: cav_markers)
         {
+            visualization_msgs::MarkerArray current_marker;
             size_t idx = 0;
+            
             while(idx < host_marker.markers.size() && idx < cav_marker.markers.size())
             {
                 if (compute_2d_distance(cav_marker.markers[idx].points[0], host_marker.markers[idx].points[0]) <= 1.0) // within 1 meter
                 {
+                    marker.id = idx;
                     //marker.header.stamp = host_marker.markers[idx].header.stamp;
-                    marker.pose.position.x = cav_marker.markers[idx].points[0].x;
-                    marker.pose.position.y = cav_marker.markers[idx].points[0].y;
-                    marker.pose.position.z = cav_marker.markers[idx].points[0].z;
-                    marker.pose.orientation.w = 1.0f;
+                    ROS_ERROR_STREAM("idx:" << idx);
+                    ROS_ERROR_STREAM("dist:" << compute_2d_distance(cav_marker.markers[idx].points[0], host_marker.markers[idx].points[0]));
 
-                    marker.text = "Collision in " + std::to_string((cav_marker.markers[idx].header.stamp - host_marker.markers[idx].header.stamp).toSec())+ "s!";
+                    marker.pose.position.x = cav_marker.markers[idx].points[0].x + 1;
+                    marker.pose.position.y = cav_marker.markers[idx].points[0].y + 1;
+                    marker.pose.position.z = cav_marker.markers[idx].points[0].z + 1;
+                    marker.pose.orientation.w = 1.0f;
+                    ROS_ERROR_STREAM("cav time: " << std::to_string(cav_marker.markers[idx].header.stamp.toSec()));
+                    ROS_ERROR_STREAM("host time: " << std::to_string(host_marker.markers[idx].header.stamp.toSec()));
+
+                    std::string collision_time = std::to_string((cav_marker.markers[idx].header.stamp - host_marker.markers[0].header.stamp).toSec());
+                    collision_time = collision_time.substr(0,collision_time.size() - 4); //reduce precision to 2 decimals
+                    marker.text = "Collision in " + collision_time + "s!";
+
                     output.markers.push_back(marker);
                 }
                 idx++;
             }
-            // last point
             
             if (compute_2d_distance(cav_marker.markers[idx-1].points[1], host_marker.markers[idx-1].points[1]) <= 1.0) // within 1 meter
-            {
-                //marker.header.stamp = host_marker.markers[idx-1].header.stamp;
-                marker.pose.position.x = cav_marker.markers[idx-1].points[1].x;
-                marker.pose.position.y = cav_marker.markers[idx-1].points[1].y;
-                marker.pose.position.z = cav_marker.markers[idx-1].points[1].z;
+            {   
+                // last point
+                ROS_ERROR_STREAM("idx:" << idx);
+                ROS_ERROR_STREAM("dist:" << compute_2d_distance(cav_marker.markers[idx-1].points[1], host_marker.markers[idx-1].points[1]));
+                marker.id = idx;
+                marker.header.stamp = host_marker.markers[idx-1].header.stamp;
+                marker.pose.position.x = cav_marker.markers[idx-1].points[1].x + 1;
+                marker.pose.position.y = cav_marker.markers[idx-1].points[1].y + 1;
+                marker.pose.position.z = cav_marker.markers[idx-1].points[1].z + 1;
 
-                
-                marker.text = "Collision in " + std::to_string((cav_marker.markers[idx-1].header.stamp + ros::Duration(0.1) - host_marker.markers[idx-1].header.stamp).toSec())+ "s!";
+                ROS_ERROR_STREAM("last cav time: " << std::to_string(cav_marker.markers[idx-1].header.stamp.toSec()));
+                ROS_ERROR_STREAM("last host time: " << std::to_string(host_marker.markers[idx-1].header.stamp.toSec()));
+                std::string collision_time = std::to_string((cav_marker.markers[idx-1].header.stamp + ros::Duration(0.1) - host_marker.markers[0].header.stamp).toSec());
+                collision_time = collision_time.substr(0,collision_time.size() - 4); //reduce precision to 2 decimals
+                marker.text = "Collision in " + collision_time + "s!";
                 output.markers.push_back(marker);
             }
+
+
         }
-        ROS_DEBUG_STREAM("Output size" << output.markers.size());
+        ROS_ERROR_STREAM("Output size" << output.markers.size());
         return output;
     }
 
@@ -423,23 +443,23 @@ namespace mobilitypath_visualizer {
         if (!host_marker_received_)
             return true;
 
-        //cav_markers_ = matchTrajectoryTimestamps(host_marker_, cav_markers_);
-        
         // publish host marker
         host_marker_pub_.publish(host_marker_);
-        
-        // publish cav markers
-        /*
+
+        cav_markers_ = {};
+
         auto host_marker_tmp = host_marker_;
         for (auto& marker : host_marker_tmp.markers)
         {
             marker.color.b = 1.0f;
             marker.color.g = 0.0f;
-            marker.header.stamp -= ros::Duration(0.5);
+            marker.header.stamp -= ros::Duration(0.050);
         }
-        */
-        cav_markers_ = {};
-        cav_markers_.push_back(debug_marker_);
+
+        cav_markers_.push_back(host_marker_tmp);
+
+        cav_markers_ = matchTrajectoryTimestamps(host_marker_, cav_markers_);
+
         for (auto const &marker: cav_markers_)
         {
             cav_marker_pub_.publish(marker);

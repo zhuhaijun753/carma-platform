@@ -15,7 +15,7 @@
   the License.
 -->
 <launch>
-	<node pkg="mobilitypath_visualizer" type="mobilitypath_visualizer" name="mobilitypath_visualizer" output="log" >
+	<node pkg="mobilitypath_visualizer" type="mobilitypath_visualizer" name="mobilitypath_visualizer" output="screen" >
     <rosparam command="load" file="$(find mobilitypath_visualizer)/config/params.yaml"/>
   </node>
 </launch>
