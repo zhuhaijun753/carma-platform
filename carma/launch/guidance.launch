@@ -175,4 +175,9 @@
     <include file="$(find trajectory_visualizer)/launch/trajectory_visualizer.launch" />
   </group>
 
+  <!-- Yield Plugin -->
+  <group>
+    <include file="$(find yield_plugin)/launch/yield_plugin.launch" />
+  </group>
+
 </launch>
