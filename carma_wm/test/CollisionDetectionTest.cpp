@@ -177,7 +177,6 @@ namespace carma_wm
 
   }
 
-
   TEST(CollisionDetectionTest, DetectCollision)
   {
 
@@ -271,7 +270,6 @@ namespace carma_wm
     cav_msgs::RoadwayObstacleList rwol;
     cav_msgs::TrajectoryPlan tp;
 
-    
     geometry_msgs::Twist veloctiy;
     __uint64_t target_time = 3;
 
@@ -389,7 +387,6 @@ namespace carma_wm
 
   TEST(CollisionDetectionFalseTest, WorldCollisionDetection)
   {
-
     cav_msgs::RoadwayObstacleList rwol;
     cav_msgs::TrajectoryPlan tp;
 

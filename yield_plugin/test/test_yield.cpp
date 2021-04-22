@@ -156,8 +156,6 @@ TEST(YieldPluginTest, test_update_traj)
   std::shared_ptr<carma_wm::CARMAWorldModel> wm = std::make_shared<carma_wm::CARMAWorldModel>();
   YieldPlugin plugin(wm, config, [&](auto msg) {}, [&](auto msg) {});
 
-  
-
   cav_msgs::RoadwayObstacleList rwol;
   cav_msgs::TrajectoryPlan tp;
   
@@ -320,8 +318,106 @@ TEST(YieldPluginTest, test_update_traj2)
   trajectory_point_7.x = 30.0;
   trajectory_point_7.y = 1.0;
   trajectory_point_7.target_time = ros::Time(6);
-   
+
   original_tp.trajectory_points = {trajectory_point_1, trajectory_point_2, trajectory_point_3, trajectory_point_4, trajectory_point_5, trajectory_point_6, trajectory_point_7};
+
+  cav_msgs::RoadwayObstacleList rwol;
+  cav_msgs::RoadwayObstacle rwo_1;
+
+  tf2::Quaternion tf_orientation;
+  tf_orientation.setRPY(0, 0, 1.5708);
+
+  rwo_1.object.pose.pose.position.x = 10;
+  rwo_1.object.pose.pose.position.y = 1;
+  rwo_1.object.pose.pose.position.z = 0;
+
+  rwo_1.object.pose.pose.orientation.x = tf_orientation.getX();
+  rwo_1.object.pose.pose.orientation.y = tf_orientation.getY();
+  rwo_1.object.pose.pose.orientation.z = tf_orientation.getZ();
+  rwo_1.object.pose.pose.orientation.w = tf_orientation.getW();
+
+  rwo_1.object.size.x = 1;
+  rwo_1.object.size.y = 1;
+  rwo_1.object.size.z = 1;
+
+  cav_msgs::PredictedState ps_1;
+  ps_1.header.stamp.nsec = 0;
+
+  ps_1.predicted_position.position.x = 12;
+  ps_1.predicted_position.position.y = 1;
+  ps_1.predicted_position.position.z = 0;
+
+  ps_1.predicted_position.orientation.x = tf_orientation.getX();
+  ps_1.predicted_position.orientation.y = tf_orientation.getY();
+  ps_1.predicted_position.orientation.z = tf_orientation.getZ();
+  ps_1.predicted_position.orientation.w = tf_orientation.getW();
+
+  cav_msgs::PredictedState ps_2;
+  ps_2.header.stamp.nsec = 2000;
+
+  ps_2.predicted_position.position.x = 14;
+  ps_2.predicted_position.position.y = 1;
+  ps_2.predicted_position.position.z = 0;
+
+  ps_2.predicted_position.orientation.x = tf_orientation.getX();
+  ps_2.predicted_position.orientation.y = tf_orientation.getY();
+  ps_2.predicted_position.orientation.z = tf_orientation.getZ();
+  ps_2.predicted_position.orientation.w = tf_orientation.getW();
+
+  cav_msgs::PredictedState ps_3;
+  ps_3.header.stamp.nsec = 3000;
+
+  ps_3.predicted_position.position.x = 16;
+  ps_3.predicted_position.position.y = 1;
+  ps_3.predicted_position.position.z = 0;
+
+  ps_3.predicted_position.orientation.x = tf_orientation.getX();
+  ps_3.predicted_position.orientation.y = tf_orientation.getY();
+  ps_3.predicted_position.orientation.z = tf_orientation.getZ();
+  ps_3.predicted_position.orientation.w = tf_orientation.getW();
+
+
+  cav_msgs::PredictedState ps_4;
+  ps_4.header.stamp.nsec = 4000;
+
+  ps_4.predicted_position.position.x = 18;
+  ps_4.predicted_position.position.y = 1;
+  ps_4.predicted_position.position.z = 0;
+
+  ps_4.predicted_position.orientation.x = tf_orientation.getX();
+  ps_4.predicted_position.orientation.y = tf_orientation.getY();
+  ps_4.predicted_position.orientation.z = tf_orientation.getZ();
+  ps_4.predicted_position.orientation.w = tf_orientation.getW();
+
+  cav_msgs::PredictedState ps_5;
+  ps_5.header.stamp.nsec = 5000;
+
+  ps_5.predicted_position.position.x = 20;
+  ps_5.predicted_position.position.y = 1;
+  ps_5.predicted_position.position.z = 0;
+
+  ps_5.predicted_position.orientation.x = tf_orientation.getX();
+  ps_5.predicted_position.orientation.y = tf_orientation.getY();
+  ps_5.predicted_position.orientation.z = tf_orientation.getZ();
+  ps_5.predicted_position.orientation.w = tf_orientation.getW();
+
+
+  rwo_1.object.predictions = {ps_1,ps_2,ps_3,ps_4,ps_5};
+  rwo_1.object.velocity.twist.linear.x = 2.0;
+
+  rwol.roadway_obstacles = {rwo_1};
+
+  std::vector<cav_msgs::RoadwayObstacle> rw_objs;
+
+  rw_objs.push_back(rwo_1);
+
+  wm->setRoadwayObjects(rw_objs);
+
+  cav_msgs::TrajectoryPlan tp_new = plugin.update_traj_for_object(original_tp, 10.0);
+
+  for (size_t i = 1; i < tp_new.trajectory_points.size(); i++) {
+    std::cout << tp_new.trajectory_points[i] << std::endl;
+  }
 
 
   double initial_pos = 0.0;
@@ -450,7 +546,7 @@ TEST(YieldPluginTest, test_update_traj_stop)
 
   std::vector<double> new_speeds;
   std::vector<double> distance_travelled;
-  for(size_t i = 1; i < original_tp.trajectory_points.size() ; i++ )
+  for(size_t i = 1; i < original_tp.trajectory_points.size(); i++ )
   {            
       double traj_target_time = i * tp / original_tp.trajectory_points.size();
       double dt_dist = plugin.polynomial_calc(values, traj_target_time);

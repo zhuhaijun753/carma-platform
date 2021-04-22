@@ -10,16 +10,49 @@ namespace carma_wm {
 
             collision_detection::MovingObject vehicle_object = ConvertVehicleToMovingObject(tp, size, veloctiy);
 
+            // for (auto i : rwol.roadway_obstacles){
+
+            //     collision_detection::MovingObject rwo = ConvertRoadwayObstacleToMovingObject(i);
+
+            //     bool collision = DetectCollision(vehicle_object, rwo, target_time);
+
+            //     if(collision) {
+            //         rwo_collison.push_back(i);
+            //     }
+            // }
+
+
             for (auto i : rwol.roadway_obstacles){
 
                 collision_detection::MovingObject rwo = ConvertRoadwayObstacleToMovingObject(i);
 
-                bool collision = DetectCollision(vehicle_object, rwo, target_time);
+                for (int j = 0; j < rwo.fp.size(); j++) {
+                    // std::cout << "helloooooo";
+                    std::cout << boost::geometry::wkt( std::get<1>(rwo.fp[j])) << std::endl;
+                    std::cout << boost::geometry::wkt( std::get<1>(vehicle_object.fp[j])) << std::endl;
 
-                if(collision) {
-                    rwo_collison.push_back(i);
+                    std::deque<polygon_t> output;
+
+                    polygon_t vehicle = std::get<1>(vehicle_object.fp[j]);
+                    polygon_t object = std::get<1>(rwo.fp[j]);
+
+                    boost::geometry::intersection(object, vehicle, output); 
+
+                    if(output.size() > 0){
+                        // std::cout << "yes";
+                        rwo_collison.push_back(i);
+                        break;
+                    }
                 }
+
+                // bool collision = DetectCollision(vehicle_object, rwo, target_time);
+
+                // if(collision) {
+                //     rwo_collison.push_back(i);
+                // }
             }
+
+
 
             return rwo_collison;
         };
@@ -110,6 +143,10 @@ namespace carma_wm {
                 std::deque<polygon_t> output;
 
                 boost::geometry::intersection(ob_1.object_polygon, ob_2.object_polygon, output); 
+
+                std::cout << boost::geometry::wkt(ob_1.object_polygon) << std::endl;
+                std::cout << boost::geometry::wkt(ob_2.object_polygon) << std::endl;
+                // std::cout << boost::geometry::wkt(output) << std::endl;
 
                 if(output.size() > 0){
                     return true;
