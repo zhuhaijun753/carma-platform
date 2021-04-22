@@ -45,7 +45,7 @@ class TrafficIncidentParserWorker
 
  public:
 
-  using PublishTrafficControlCallback = std::function<void(const cav_msgs::TrafficControlMessageV01&)>;
+  using PublishTrafficControlCallback = std::function<void(const cav_msgs::TrafficControlMessage&)>;
 
   /*!
    * \brief Constructor
@@ -82,7 +82,7 @@ class TrafficIncidentParserWorker
     \brief composeTrafficControlMesssage algorithm for extracting the closed lanelet from internally saved mobility message (or geofence) params and assign it to trafic contol message. 
     Closed lanelets are represent by vector of points, where each point represents the geometric middle point of a closed lanelet
   */
-  std::vector<cav_msgs::TrafficControlMessageV01> composeTrafficControlMesssages();
+  std::vector<cav_msgs::TrafficControlMessage> composeTrafficControlMesssages();
 
     /*! \fngetIncidentOriginPoint()
     \brief getIncidentOriginPoint converts internally saved incident origin point from ECEF to local map frame

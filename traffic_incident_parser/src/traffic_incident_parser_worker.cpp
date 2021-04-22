@@ -110,7 +110,7 @@ namespace traffic
     return {local_point3d.x(), local_point3d.y()};
   }
 
-  std::vector<cav_msgs::TrafficControlMessageV01> TrafficIncidentParserWorker::composeTrafficControlMesssages()
+  std::vector<cav_msgs::TrafficControlMessage> TrafficIncidentParserWorker::composeTrafficControlMesssages()
   {
     local_point_=getIncidentOriginPoint();
     auto current_lanelets = lanelet::geometry::findNearest(wm_->getMap()->laneletLayer, local_point_, 1);  
@@ -203,7 +203,12 @@ namespace traffic
     traffic_mobility_msg.params.detail.maxspeed=speed_advisory;
     output_msg.push_back(traffic_mobility_msg);
 
-    return output_msg;
+    cav_msgs::TrafficControlMessageV01 traffic_control_msg;
+    traffic_control_msg.choice=cav_msgs::TrafficControlMessage::TCMV01;
+    traffic_control_msg.tcmV01=output_msg;
+
+    return traffic_control_msg;
+
     }
 
 }//traffic
