@@ -28,18 +28,28 @@ namespace carma_wm {
 
                 for (int j = 0; j < rwo.fp.size(); j++) {
                     // std::cout << "helloooooo";
-                    std::cout << boost::geometry::wkt( std::get<1>(rwo.fp[j])) << std::endl;
-                    std::cout << boost::geometry::wkt( std::get<1>(vehicle_object.fp[j])) << std::endl;
 
                     std::deque<polygon_t> output;
 
                     polygon_t vehicle = std::get<1>(vehicle_object.fp[j]);
                     polygon_t object = std::get<1>(rwo.fp[j]);
 
+                    boost::geometry::correct(object);
+                    boost::geometry::correct(vehicle);
+
                     boost::geometry::intersection(object, vehicle, output); 
 
+                    // std::cout << "object " << boost::geometry::wkt( object) << std::endl;
+                    // std::cout << "car " << boost::geometry::wkt(vehicle) << std::endl;
+
                     if(output.size() > 0){
-                        // std::cout << "yes";
+
+                        // BOOST_FOREACH(polygon_t const& p, output)
+                        // {
+                        //     std::cout << ": " << boost::geometry::area(p) << std::endl;
+                        // }
+
+                        // std::cout << "yes" << std::endl;
                         rwo_collison.push_back(i);
                         break;
                     }

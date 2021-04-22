@@ -327,7 +327,7 @@ TEST(YieldPluginTest, test_update_traj2)
   tf2::Quaternion tf_orientation;
   tf_orientation.setRPY(0, 0, 1.5708);
 
-  rwo_1.object.pose.pose.position.x = 10;
+  rwo_1.object.pose.pose.position.x = 5;
   rwo_1.object.pose.pose.position.y = 1;
   rwo_1.object.pose.pose.position.z = 0;
 
@@ -343,7 +343,7 @@ TEST(YieldPluginTest, test_update_traj2)
   cav_msgs::PredictedState ps_1;
   ps_1.header.stamp.nsec = 0;
 
-  ps_1.predicted_position.position.x = 12;
+  ps_1.predicted_position.position.x = 5;
   ps_1.predicted_position.position.y = 1;
   ps_1.predicted_position.position.z = 0;
 
@@ -352,58 +352,59 @@ TEST(YieldPluginTest, test_update_traj2)
   ps_1.predicted_position.orientation.z = tf_orientation.getZ();
   ps_1.predicted_position.orientation.w = tf_orientation.getW();
 
-  cav_msgs::PredictedState ps_2;
-  ps_2.header.stamp.nsec = 2000;
+  // cav_msgs::PredictedState ps_2;
+  // ps_2.header.stamp.nsec = 2000;
 
-  ps_2.predicted_position.position.x = 14;
-  ps_2.predicted_position.position.y = 1;
-  ps_2.predicted_position.position.z = 0;
+  // ps_2.predicted_position.position.x = 14;
+  // ps_2.predicted_position.position.y = 1;
+  // ps_2.predicted_position.position.z = 0;
 
-  ps_2.predicted_position.orientation.x = tf_orientation.getX();
-  ps_2.predicted_position.orientation.y = tf_orientation.getY();
-  ps_2.predicted_position.orientation.z = tf_orientation.getZ();
-  ps_2.predicted_position.orientation.w = tf_orientation.getW();
+  // ps_2.predicted_position.orientation.x = tf_orientation.getX();
+  // ps_2.predicted_position.orientation.y = tf_orientation.getY();
+  // ps_2.predicted_position.orientation.z = tf_orientation.getZ();
+  // ps_2.predicted_position.orientation.w = tf_orientation.getW();
 
-  cav_msgs::PredictedState ps_3;
-  ps_3.header.stamp.nsec = 3000;
+  // cav_msgs::PredictedState ps_3;
+  // ps_3.header.stamp.nsec = 3000;
 
-  ps_3.predicted_position.position.x = 16;
-  ps_3.predicted_position.position.y = 1;
-  ps_3.predicted_position.position.z = 0;
+  // ps_3.predicted_position.position.x = 16;
+  // ps_3.predicted_position.position.y = 1;
+  // ps_3.predicted_position.position.z = 0;
 
-  ps_3.predicted_position.orientation.x = tf_orientation.getX();
-  ps_3.predicted_position.orientation.y = tf_orientation.getY();
-  ps_3.predicted_position.orientation.z = tf_orientation.getZ();
-  ps_3.predicted_position.orientation.w = tf_orientation.getW();
-
-
-  cav_msgs::PredictedState ps_4;
-  ps_4.header.stamp.nsec = 4000;
-
-  ps_4.predicted_position.position.x = 18;
-  ps_4.predicted_position.position.y = 1;
-  ps_4.predicted_position.position.z = 0;
-
-  ps_4.predicted_position.orientation.x = tf_orientation.getX();
-  ps_4.predicted_position.orientation.y = tf_orientation.getY();
-  ps_4.predicted_position.orientation.z = tf_orientation.getZ();
-  ps_4.predicted_position.orientation.w = tf_orientation.getW();
-
-  cav_msgs::PredictedState ps_5;
-  ps_5.header.stamp.nsec = 5000;
-
-  ps_5.predicted_position.position.x = 20;
-  ps_5.predicted_position.position.y = 1;
-  ps_5.predicted_position.position.z = 0;
-
-  ps_5.predicted_position.orientation.x = tf_orientation.getX();
-  ps_5.predicted_position.orientation.y = tf_orientation.getY();
-  ps_5.predicted_position.orientation.z = tf_orientation.getZ();
-  ps_5.predicted_position.orientation.w = tf_orientation.getW();
+  // ps_3.predicted_position.orientation.x = tf_orientation.getX();
+  // ps_3.predicted_position.orientation.y = tf_orientation.getY();
+  // ps_3.predicted_position.orientation.z = tf_orientation.getZ();
+  // ps_3.predicted_position.orientation.w = tf_orientation.getW();
 
 
-  rwo_1.object.predictions = {ps_1,ps_2,ps_3,ps_4,ps_5};
-  rwo_1.object.velocity.twist.linear.x = 2.0;
+  // cav_msgs::PredictedState ps_4;
+  // ps_4.header.stamp.nsec = 4000;
+
+  // ps_4.predicted_position.position.x = 18;
+  // ps_4.predicted_position.position.y = 1;
+  // ps_4.predicted_position.position.z = 0;
+
+  // ps_4.predicted_position.orientation.x = tf_orientation.getX();
+  // ps_4.predicted_position.orientation.y = tf_orientation.getY();
+  // ps_4.predicted_position.orientation.z = tf_orientation.getZ();
+  // ps_4.predicted_position.orientation.w = tf_orientation.getW();
+
+  // cav_msgs::PredictedState ps_5;
+  // ps_5.header.stamp.nsec = 5000;
+
+  // ps_5.predicted_position.position.x = 20;
+  // ps_5.predicted_position.position.y = 1;
+  // ps_5.predicted_position.position.z = 0;
+
+  // ps_5.predicted_position.orientation.x = tf_orientation.getX();
+  // ps_5.predicted_position.orientation.y = tf_orientation.getY();
+  // ps_5.predicted_position.orientation.z = tf_orientation.getZ();
+  // ps_5.predicted_position.orientation.w = tf_orientation.getW();
+
+  std::cout << "important tttttttttttttttttttttttttttttttttttttttttttttt";
+  // rwo_1.object.predictions = {ps_1,ps_2,ps_3,ps_4,ps_5};
+  rwo_1.object.predictions = {ps_1};
+  rwo_1.object.velocity.twist.linear.x = 0.0;
 
   rwol.roadway_obstacles = {rwo_1};
 
