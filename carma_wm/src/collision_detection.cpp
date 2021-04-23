@@ -73,6 +73,9 @@ namespace carma_wm {
             
             mo.object_polygon = ObjectToBoostPolygon<polygon_t>(rwo.object.pose.pose, rwo.object.size);
 
+            std::tuple <__uint64_t,polygon_t> current_pose(i.header.stamp.toNSec() / 1000000, mo.object_polygon));
+            mo.fp.push_back(current_pose);
+
             // Add future polygons for roadway obstacle
             for (auto i : rwo.object.predictions){
                 std::tuple <__uint64_t,polygon_t> future_object(i.header.stamp.toNSec() / 1000000,ObjectToBoostPolygon<polygon_t>(i.predicted_position, rwo.object.size));
